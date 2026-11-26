@@ -15,6 +15,7 @@ Cung cấp cơ chế cho ăn, dắt thú cưng đi dạo, quản lý túi đồ 
 | Mã định danh | Mã duy nhất của thú cưng | Bắt buộc, chuỗi ký tự |
 | Loài | Tên giống thú cưng | Bắt buộc, ví dụ Shiba |
 | Độ hiếm | Cấp bậc phân loại từ vòng quay | Bắt buộc, một trong Common, Rare, Epic, Legendary, Mythic |
+| Giới tính | Phân loại giống đực hoặc cái | Bắt buộc, một trong Male, Female |
 | Cấp độ | Cấp độ phát triển hiện tại | Bắt buộc, số nguyên dương từ 1 |
 | EXP hiện tại | Điểm kinh nghiệm đã tích lũy | Bắt buộc, số nguyên từ 0 |
 | EXP tối đa | Ngưỡng điểm để thăng cấp tiếp theo | Bắt buộc, số nguyên dương |
@@ -36,6 +37,7 @@ Cung cấp cơ chế cho ăn, dắt thú cưng đi dạo, quản lý túi đồ 
 - **BR-06** Khi người chơi quay Gacha → hệ thống chọn ngẫu nhiên thú cưng theo 5 cấp độ với tỷ lệ: Thông Thường (50%), Hiếm (28%), Siêu Hiếm (14%), Huyền Thoại (6%), Thần Thoại (2%).
 - **BR-07** Khi người chơi trang bị thú cưng mới → hệ thống chuyển linh thú đồng hành theo người chơi và cập nhật lại chỉ số sức mạnh tương ứng.
 - **BR-08** Khi người chơi gia nhập phòng game → hệ thống tự động gán 1 trong 6 chuồng thú cưng riêng biệt có biển tên hiển thị tên người chơi và điểm xuất phát tại chuồng; khi người chơi thoát → chuồng được giải phóng về trạng thái sẵn sàng.
+- **BR-09** Khi người chơi sở hữu nhiều thú cưng → có thể thả từ 5 đến 10 chú chó ra dạo chơi tự do trong khuôn viên vườn riêng của mình; mỗi chú chó mang giới tính Đực (♂) hoặc Cái (♀) với đặc điểm ngoại hình riêng biệt.
 
 ## Quyền
 | Quyền | Nghĩa | Vai |
@@ -45,6 +47,7 @@ Cung cấp cơ chế cho ăn, dắt thú cưng đi dạo, quản lý túi đồ 
 | pet:bag | Mở túi đồ hành trang | Người chơi |
 | pet:gacha | Quay vòng quay thú cưng | Người chơi |
 | pet:equip | Trang bị thú cưng | Người chơi |
+| pet:roam | Thả thú cưng tự do trong vườn | Người chơi |
 | plot:claim | Sở hữu chuồng riêng trong phòng | Người chơi |
 
 ## Màn hình
