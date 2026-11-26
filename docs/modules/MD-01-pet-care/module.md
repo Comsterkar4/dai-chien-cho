@@ -38,6 +38,7 @@ Cung cấp cơ chế cho ăn, dắt thú cưng đi dạo, quản lý túi đồ 
 - **BR-07** Khi người chơi trang bị thú cưng mới → hệ thống chuyển linh thú đồng hành theo người chơi và cập nhật lại chỉ số sức mạnh tương ứng.
 - **BR-08** Khi người chơi gia nhập phòng game → hệ thống tự động gán 1 trong 6 chuồng thú cưng riêng biệt có biển tên hiển thị tên người chơi và điểm xuất phát tại chuồng; khi người chơi thoát → chuồng được giải phóng về trạng thái sẵn sàng.
 - **BR-09** Khi người chơi sở hữu nhiều thú cưng → có thể thả từ 5 đến 10 chú chó ra dạo chơi tự do trong khuôn viên vườn riêng của mình; mỗi chú chó mang giới tính Đực (♂) hoặc Cái (♀) với đặc điểm ngoại hình riêng biệt.
+- **BR-10** Khi thú cưng ở trong khuôn viên vườn riêng → hệ thống tự động điều khiển di chuyển tự do, linh hoạt trong phạm vi rào chắn (đi dạo ngẫu nhiên, ghé thăm bát ăn, bát nước, đệm nằm, dốc đồ chơi) với hiệu ứng bước đi nhấp nhô vui vẻ (Bouncy Walk) và hành vi ngẫu nhiên (ngửi đất, nhảy cẫng, xoay vòng) mà không vượt quá hàng rào.
 
 ## Quyền
 | Quyền | Nghĩa | Vai |
