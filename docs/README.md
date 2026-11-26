@@ -28,6 +28,7 @@ Quản lý thông tin và sự phát triển của thú cưng do người chơi 
 | pet:bag | MD-01 | Người chơi | — |
 | pet:gacha | MD-01 | Người chơi | — |
 | pet:equip | MD-01 | Người chơi | — |
+| plot:claim | MD-01 | Người chơi | — |
 
 ### Thực thể
 

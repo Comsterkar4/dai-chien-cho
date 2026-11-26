@@ -6,7 +6,7 @@ title: Chăm sóc thú cưng
 # MD-01. Chăm sóc thú cưng
 
 Quản lý thông tin và sự phát triển của thú cưng do người chơi sở hữu.
-Cung cấp cơ chế cho ăn, dắt thú cưng đi dạo, quản lý túi đồ thức ăn, vòng quay Gacha và thăng cấp độ.
+Cung cấp cơ chế cho ăn, dắt thú cưng đi dạo, quản lý túi đồ thức ăn, vòng quay Gacha, khu chuồng riêng và thăng cấp độ.
 
 ## Thực thể
 ### Thú cưng
@@ -35,6 +35,7 @@ Cung cấp cơ chế cho ăn, dắt thú cưng đi dạo, quản lý túi đồ 
 - **BR-05** Khi dắt thú cưng đi dạo di chuyển trong sân → hệ thống cộng 15 điểm EXP định kỳ mỗi 3.5 giây.
 - **BR-06** Khi người chơi quay Gacha → hệ thống chọn ngẫu nhiên thú cưng theo 5 cấp độ với tỷ lệ: Thông Thường (50%), Hiếm (28%), Siêu Hiếm (14%), Huyền Thoại (6%), Thần Thoại (2%).
 - **BR-07** Khi người chơi trang bị thú cưng mới → hệ thống chuyển linh thú đồng hành theo người chơi và cập nhật lại chỉ số sức mạnh tương ứng.
+- **BR-08** Khi người chơi gia nhập phòng game → hệ thống tự động gán 1 trong 6 chuồng thú cưng riêng biệt có biển tên hiển thị tên người chơi và điểm xuất phát tại chuồng; khi người chơi thoát → chuồng được giải phóng về trạng thái sẵn sàng.
 
 ## Quyền
 | Quyền | Nghĩa | Vai |
@@ -44,6 +45,7 @@ Cung cấp cơ chế cho ăn, dắt thú cưng đi dạo, quản lý túi đồ 
 | pet:bag | Mở túi đồ hành trang | Người chơi |
 | pet:gacha | Quay vòng quay thú cưng | Người chơi |
 | pet:equip | Trang bị thú cưng | Người chơi |
+| plot:claim | Sở hữu chuồng riêng trong phòng | Người chơi |
 
 ## Màn hình
 | Mã | Màn hình | App | Ghi chú |
@@ -52,3 +54,5 @@ Cung cấp cơ chế cho ăn, dắt thú cưng đi dạo, quản lý túi đồ 
 | SC-02 | Cửa sổ túi đồ InventoryModal | . | Hiển thị danh sách vật phẩm thức ăn và đồ chơi |
 | SC-03 | Cửa sổ quay GachaModal | . | Hiển thị tỷ lệ 5 cấp độ và nút quay x1 x5 |
 | SC-04 | Cửa sổ kết quả GachaResultPopup | . | Hiển thị thú cưng vừa trúng kèm nút trang bị |
+| SC-05 | Khu chuồng thú cưng 6 người chơi | . | 6 khuôn viên riêng biệt có nhà doghouse, hàng rào và bát ăn |
+| SC-06 | Quảng trường Gacha và Đấu trường Solo | . | Khu vực quay trứng thần bí và võ đài chiến đấu solo |

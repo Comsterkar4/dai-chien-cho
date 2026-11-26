@@ -11,7 +11,7 @@ ideas: [I-01]
 # F-04. Vòng quay Gacha thú cưng
 
 Quay nhận ngẫu nhiên các giống thú cưng theo 5 cấp độ hiếm và trang bị thú cưng đồng hành.
-Vào từ: SC-01, nút Gacha trên thanh công cụ hoặc SC-03
+Vào từ: SC-01, SC-06, nút Gacha trên thanh công cụ hoặc SC-03
 
 ## Quy tắc
 - **R1** Khi người chơi bấm nút Quay 1 lần hoặc Quay 5 lần → hệ thống bốc thăm ngẫu nhiên thú cưng theo tỷ lệ 5 cấp độ theo BR-06.

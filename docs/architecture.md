@@ -1,45 +1,41 @@
-# Pet Dog Simulator - Kiến trúc & Kế hoạch triển khai MVP
+# Pet Dog Simulator - Kiến trúc & Quy hoạch bản đồ thế giới
 
 ## 1. Tổng quan dự án
 * **Tên dự án:** Pet Dog Simulator
-* **Mục tiêu Giai đoạn 1 (MVP):** Người chơi vào game sở hữu 1 chú chó ban đầu, có thể cho chó ăn, nhận EXP, tăng Level, hiển thị HUD đẹp mắt và có hiệu ứng thăng cấp.
+* **Quy mô phòng:** Tối đa 6 người chơi cùng tham gia.
+* **Cấu trúc thế giới:** Bản đồ chia thành 4 phân khu chuyên biệt kết nối qua Ngã Tư Trung Tâm (Central Crossroads Hub).
 
-## 2. Kiến trúc hệ thống trong Roblox Studio
+## 2. Quy hoạch 4 phân khu trên bản đồ (280 x 280 studs)
 
-### 2.1. Workspace (Môi trường & Models)
-* `GameMap`: Khu vực bãi cỏ rộng rãi, hàng rào gỗ, cây cối trang trí phong cách Low-Poly / Roblox Simulator.
-* `PetModel`: Model chú chó ban đầu (Shiba / Puppy) có animation đi theo người chơi hoặc đứng cạnh người chơi.
+### 2.1. Khu 6 Chuồng Riêng Cho 6 Người Chơi (Phía Nam)
+* **Quy mô:** 6 khuôn viên riêng biệt (Plot 1 đến Plot 6, kích thước 28x28 studs mỗi chuồng) bố trí dọc Đại lộ miền Nam.
+* **Chi tiết mỗi chuồng:**
+  * Ngôi nhà thú cưng Doghouse bằng gỗ có mái chữ A sắc màu riêng biệt (Đỏ, Xanh biển, Xanh lá, Cam, Tím, Hồng).
+  * Hàng rào trắng bao quanh với cổng vào và biển tên cá nhân hóa (`🐾 CHUỒNG #X - Chủ: [Tên Player]`).
+  * Bát thức ăn (`Bát Thức Ăn`), bát nước (`Bát Nước`) và đệm lót nằm êm ái.
+  * Điểm xuất phát riêng (`PlotSpawn`) - người chơi vào game sẽ tự động spawn tại chuồng của mình.
 
-### 2.2. ReplicatedStorage (Giao tiếp & Dữ liệu chia sẻ)
-* `Events`:
-  * `FeedPet` (RemoteEvent): Client gửi yêu cầu cho thú cưng ăn.
-  * `UpdatePetData` (RemoteEvent): Server gửi dữ liệu cập nhật (EXP, Level, Stats) về Client.
-* `Modules`:
-  * `PetConfig`: Bảng dữ liệu cấu hình giống thú cưng, lượng EXP mỗi lần ăn, công thức EXP lên cấp (`MaxEXP = Level * 100`).
+### 2.2. Khu Quảng Trường Gacha Thần Bí (Phía Tây)
+* Sàn đá hoa cương tím huyền bí (đường kính 44 studs) viền neon phát sáng.
+* Cổng chào mạ vàng `⭐ KHU QUAY GACHA ⭐`.
+* Bệ hoa cương với Trứng Thần Bí khổng lồ bay lơ lửng, hiệu ứng sao lấp lánh và 4 trụ tinh thể pha lê.
+* Tương tác mở Vòng quay Gacha 5 cấp độ hiếm (50% Thường, 28% Hiếm, 14% Siêu Hiếm, 6% Huyền Thoại, 2% Thần Thoại).
 
-### 2.3. ServerScriptService (Xử lý Backend Game)
-* `PetServer`:
-  * Khởi tạo dữ liệu Pet cho người chơi khi gia nhập game.
-  * Xử lý xác thực cho ăn (cooldown chống spam click).
-  * Tính toán tăng EXP và kích hoạt thăng cấp (Level Up).
-  * Spawn pet và gán quyền sở hữu cho người chơi.
+### 2.3. Khu Đấu Trường Solo Pet (Phía Đông)
+* Sàn võ đài nâng cao (đường kính 42 studs, cao 3 studs) bằng bê tông cốt thép viền đỏ rực lửa.
+* Cổng chào kim loại `⚔️ ĐẤU TRƯỜNG SOLO PET ⚔️`.
+* Võ đài trung tâm với 4 cột góc, dây thừng sàn đấu và 2 vòng tròn thi đấu: Góc Đỏ vs Góc Xanh.
 
-### 2.4. StarterGui (Giao diện người dùng - HUD)
-* `MainHUD` (ScreenGui):
-  * **PetInfoCard:** Khung hiển thị Tên Pet, Cấp độ (Level), Thanh EXP tiến trình (ProgressBar) có chữ `EXP: xx/xx`.
-  * **ActionButtonPanel:** 
-    * Nút `FEED` to rõ, màu cam/xanh bắt mắt, có hiệu ứng nảy nút (bounce) khi bấm.
-    * Các nút tính năng mở rộng: `Pets`, `Gacha`, `Battle` (tạm thời đánh dấu mở ở Giai đoạn sau).
+### 2.4. Khu Công Viên Thú Cưng (Phía Bắc)
+* Khuôn viên bãi cỏ xanh rộng lớn (90 x 80 studs) có hàng rào bao quanh.
+* Cổng vòm gỗ `🌳 CÔNG VIÊN THÚ CƯNG 🌳`.
+* Chướng ngại vật dạo chơi cho thú cưng: 3 bục nhảy gỗ (Agility Hurdles), 2 vòng nhảy neon (Agility Hoops).
+* Rải rác các khúc xương phát sáng (`Pickups`) để cún nhặt khi dắt đi dạo.
 
-### 2.5. StarterPlayerScripts (Client Logic)
-* `PetController`: Bắt sự kiện bấm nút Feed, gửi request lên Server, hiển thị hiệu ứng âm thanh và hạt ánh sáng (Particle/VFX) khi lên cấp.
-
----
-
-## 3. Các bước triển khai Giai đoạn 1 (MVP)
-1. **Bước 1:** Dựng Map khu vườn xanh cho Pet Simulator (bãi cỏ, hàng rào, cây cối, ánh sáng rực rỡ).
-2. **Bước 2:** Tạo Model chú chó đầu tiên (Shiba Inu phong cách Roblox dễ thương) và gắn hiệu ứng hạt quanh chân.
-3. **Bước 3:** Tạo các RemoteEvents trong `ReplicatedStorage` và code `PetServer` trong `ServerScriptService`.
-4. **Bước 4:** Thiết kế giao diện `MainHUD` trong `StarterGui` (Thanh EXP, Level, nút Feed).
-5. **Bước 5:** Thêm hiệu ứng VFX khi cho ăn và khi lên cấp (Level Up).
-6. **Bước 6:** Chạy Playtest trực tiếp để kiểm tra trải nghiệm thực tế.
+### 2.5. Ngã Tư Trung Tâm (Central Crossroads Hub)
+* Quảng trường trung tâm lát đá hoa cương có viền neon vàng.
+* Cột biển chỉ dẫn 4 hướng bằng gỗ với các mũi tên màu sắc trực quan:
+  * ⬆️ CÔNG VIÊN
+  * ⬅️ KHU GACHA
+  * ➡️ ĐẤU TRƯỜNG
+  * ⬇️ 6 KHU CHUỒNG

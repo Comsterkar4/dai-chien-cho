@@ -11,7 +11,7 @@ ideas: [I-01]
 # F-01. Cho ăn và tăng cấp thú cưng
 
 Cho phép người chơi cho thú cưng ăn, dắt chó đi dạo để nhận EXP và tăng cấp độ khi tích lũy đủ EXP.
-Vào từ: SC-01, nút Feed, nút Dắt chó hoặc SC-02
+Vào từ: SC-01, SC-05, nút Feed, nút Dắt chó hoặc SC-02
 
 ## Quy tắc
 - **R1** Khi người chơi gia nhập game lần đầu → hệ thống khởi tạo thú cưng cấp 1 với 0 điểm kinh nghiệm theo TR-01 và BR-01.
