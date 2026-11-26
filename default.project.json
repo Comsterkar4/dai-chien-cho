@@ -1,0 +1,39 @@
+{
+  "name": "PetDogSimulator",
+  "tree": {
+    "$className": "DataModel",
+    "ServerScriptService": {
+      "$className": "ServerScriptService",
+      "PetServer": {
+        "$path": "src/server/PetServer.server.luau"
+      },
+      "PlotRoamingPetController": {
+        "$path": "src/server/PlotRoamingPetController.server.luau"
+      }
+    },
+    "ReplicatedStorage": {
+      "$className": "ReplicatedStorage",
+      "Modules": {
+        "$className": "Folder",
+        "PetConfig": {
+          "$path": "src/shared/PetConfig.luau"
+        },
+        "UIFramework": {
+          "$path": "src/shared/UIFramework.luau"
+        },
+        "Spring": {
+          "$path": "src/shared/Spring.luau"
+        }
+      }
+    },
+    "StarterGui": {
+      "$className": "StarterGui",
+      "MainHUD": {
+        "$className": "ScreenGui",
+        "HudController": {
+          "$path": "src/client/HudController.client.luau"
+        }
+      }
+    }
+  }
+}
