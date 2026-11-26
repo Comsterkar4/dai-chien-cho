@@ -26,11 +26,15 @@
 * Cổng chào kim loại `⚔️ ĐẤU TRƯỜNG SOLO PET ⚔️`.
 * Võ đài trung tâm với 4 cột góc, dây thừng sàn đấu và 2 vòng tròn thi đấu: Góc Đỏ vs Góc Xanh.
 
-### 2.4. Khu Công Viên Thú Cưng (Phía Bắc)
-* Khuôn viên bãi cỏ xanh rộng lớn (90 x 80 studs) có hàng rào bao quanh.
-* Cổng vòm gỗ `🌳 CÔNG VIÊN THÚ CƯNG 🌳`.
-* Chướng ngại vật dạo chơi cho thú cưng: 3 bục nhảy gỗ (Agility Hurdles), 2 vòng nhảy neon (Agility Hoops).
-* Rải rác các khúc xương phát sáng (`Pickups`) để cún nhặt khi dắt đi dạo.
+### 2.4. Khu Công Viên Thú Cưng Hoàng Gia - Pet Wonderland (Phía Bắc)
+* Khuôn viên đại công viên siêu rộng (126 x 104 studs) với thảm cỏ non tươi mát, hàng rào trắng phong cách châu Âu cao 4.2 studs.
+* Cổng chào Hoàng Gia đá cẩm thạch trắng viền vàng cao 16 studs với biển hiệu neon: `✨ CÔNG VIÊN THÚ CƯNG VIP - PET WONDERLAND ✨`.
+* Đại lộ đá hoa cương dẫn vào trung tâm công viên với các đường nhánh kết nối các phân khu chức năng.
+* Hồ bơi cún cưng (Doggy Splash Pool) nước trong suốt pha lê có đài phun nước 3 tầng (`FountainCenter`) và các phao cứu sinh Donut rực rỡ nổi trên mặt nước.
+* Chòi nghỉ mát lục giác Hoàng Gia (Royal Gazebo) bằng gỗ sồi mái ngói đỏ kẹo ngọt, có bàn picnic và ghế nghỉ ngơi.
+* Khu vận động thể lực: Cầu trượt kẹo ngọt sắc màu (Playground Slide) có bậc thang và máng trượt dốc, kết hợp 4 vòng nhảy Neon phát sáng vượt chướng ngại vật.
+* Vườn cây hoa anh đào (Sakura Grove) rủ cánh hoa hồng rơi lơ lửng, ghế băng công viên gỗ cổ điển (Park Benches) đặt dưới bóng râm.
+* Hệ thống 8 điểm phần thưởng phát sáng phong phú: Xương Hoàng Kim (+100 EXP), Xương Bạc (+50 EXP), Bánh Cầu Vồng Thần Kỳ, Quả Bóng Phép Thuật.
 
 ### 2.5. Ngã Tư Trung Tâm (Central Crossroads Hub)
 * Quảng trường trung tâm lát đá hoa cương có viền neon vàng.
