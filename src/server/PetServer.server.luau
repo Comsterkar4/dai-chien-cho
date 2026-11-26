@@ -17,6 +17,7 @@ local PlotService = require(ServicesFolder:WaitForChild("PlotService"))
 local InventoryService = require(ServicesFolder:WaitForChild("InventoryService"))
 local GachaService = require(ServicesFolder:WaitForChild("GachaService"))
 local PetService = require(ServicesFolder:WaitForChild("PetService"))
+local BattleService = require(ServicesFolder:WaitForChild("BattleService"))
 
 -- 3. Khởi tạo mạng RemoteEvents
 local events = NetworkEvents.Init()
@@ -29,6 +30,7 @@ local RollGachaEvent = events["RollGacha"]
 local GachaResultEvent = events["GachaResult"]
 local EquipPetEvent = events["EquipPet"]
 local UpdateCollectionEvent = events["UpdatePetCollection"]
+local StartPetBattleEvent = events["StartPetBattle"]
 
 local cooldowns: {[Player]: number} = {}
 
@@ -152,6 +154,12 @@ EquipPetEvent.OnServerEvent:Connect(function(player: Player, petId: string)
             UpdateEvent:FireClient(player, payload)
         end
     end
+end)
+
+-- Khiêu chiến Đấu trường Pet (StartPetBattle)
+StartPetBattleEvent.OnServerEvent:Connect(function(player: Player, bossId: string)
+    if typeof(bossId) ~= "string" then return end
+    BattleService.StartBattle(player, bossId, PetService, NetworkEvents)
 end)
 
 -- 6. Khởi động Vòng lặp dạo bộ tích lũy EXP

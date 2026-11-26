@@ -14,6 +14,9 @@ local EVENT_NAMES = {
     "GachaResult",
     "EquipPet",
     "UpdatePetCollection",
+    "StartPetBattle",
+    "BattleUpdate",
+    "BattleFinish",
 }
 
 local cachedEvents = {}
