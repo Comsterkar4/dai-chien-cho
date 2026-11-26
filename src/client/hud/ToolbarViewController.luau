@@ -88,14 +88,21 @@ function ToolbarViewController.Init(mainHud: ScreenGui, UIFramework: any, WebSty
 
     -- Click Bật/Tắt Dây dắt chó
     local isLeashing = true
+    local leashLabel = leashBtn:FindFirstChild("ButtonLabel") :: TextLabel?
+    local leashIcon = leashBtn:FindFirstChild("ButtonIcon") :: TextLabel?
+
     leashBtn.MouseButton1Click:Connect(function()
         isLeashing = not isLeashing
         ToggleLeashEvent:FireServer()
         if isLeashing then
-            WebStyleEngine.StyleButton(leashBtn, "Cyan", 16)
+            WebStyleEngine.StyleButton(leashBtn, "Cyan", 18)
+            if leashLabel then leashLabel.Text = "DẮT CHÓ" end
+            if leashIcon then leashIcon.Text = "🦮" end
             ToolbarViewController.SpawnExpPopup(leashBtn, "🦮 BẬT DẮT")
         else
-            WebStyleEngine.StyleButton(leashBtn, "GlassHover", 16)
+            WebStyleEngine.StyleButton(leashBtn, "GlassHover", 18)
+            if leashLabel then leashLabel.Text = "THẢ DÂY" end
+            if leashIcon then leashIcon.Text = "🐾" end
             ToolbarViewController.SpawnExpPopup(leashBtn, "❌ THẢ DÂY")
         end
     end)
