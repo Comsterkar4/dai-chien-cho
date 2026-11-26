@@ -10,12 +10,13 @@ ideas: [I-01]
 ---
 # F-02. Giao diện HUD thú cưng
 
-Hiển thị thông tin tên, cấp độ, thanh tiến trình EXP và các nút chức năng trên màn hình người chơi.
-Vào từ: SC-01
+Hiển thị thông tin tên, cấp độ, thanh tiến trình EXP, thanh công cụ cạnh phải và cửa sổ túi đồ.
+Vào từ: SC-01, SC-02
 
 ## Quy tắc
 - **R1** Luôn → hệ thống hiển thị bảng thông tin thú cưng gồm tên, cấp độ và thanh tiến trình kinh nghiệm trực quan theo UI-01.
-- **R2** Luôn → hệ thống hiển thị nút Feed to nổi bật ở phía dưới màn hình và các nút chức năng phụ theo UI-02.
+- **R2** Luôn → hệ thống hiển thị thanh công cụ xếp dọc ở cạnh phải màn hình gồm các nút hành động theo UI-02 và UI-04.
+- **R3** Khi người chơi bấm nút Túi đồ → hệ thống mở cửa sổ túi đồ hiển thị danh sách vật phẩm theo SC-02.
 
 ## Dữ liệu hiển thị
 | Thông tin | Nguồn | Ghi chú |
@@ -31,8 +32,14 @@ Vào từ: SC-01
 - Khi: quan sát giao diện HUD
 - Thì: thanh tiến trình hiển thị tỷ lệ 50 phần trăm kèm nhãn 50 trên 100
 
-### F-02-AC2 · Hiển thị nút Feed
+### F-02-AC2 · Hiển thị thanh công cụ cạnh phải
 - Phủ: R2 · Kiểm: e2e
 - Cho: người chơi đang ở trong game
-- Khi: quan sát khu vực dưới màn hình
-- Thì: nút Feed hiển thị nổi bật với màu sắc tươi sáng
+- Khi: quan sát khu vực cạnh phải màn hình
+- Thì: các nút Cho ăn, Túi đồ, Dắt chó hiển thị ngay ngắn không che khuất phía dưới
+
+### F-02-AC3 · Mở cửa sổ túi đồ
+- Phủ: R3 · Kiểm: e2e
+- Cho: người chơi đang ở màn hình chính
+- Khi: bấm vào nút Túi đồ
+- Thì: cửa sổ túi đồ hiển thị ở giữa màn hình kèm danh sách vật phẩm

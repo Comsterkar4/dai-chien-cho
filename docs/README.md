@@ -23,6 +23,8 @@ Quản lý thông tin và sự phát triển của thú cưng do người chơi 
 | Quyền | Mảng | Vai | F |
 |---|---|---|---|
 | pet:feed | MD-01 | Người chơi | — |
+| pet:walk | MD-01 | Người chơi | — |
+| pet:bag | MD-01 | Người chơi | — |
 
 ### Thực thể
 
