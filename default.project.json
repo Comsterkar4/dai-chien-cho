@@ -35,6 +35,9 @@
         },
         "Spring": {
           "$path": "src/shared/framework/Spring.luau"
+        },
+        "WebStyleEngine": {
+          "$path": "src/shared/framework/WebStyleEngine.luau"
         }
       }
     },
