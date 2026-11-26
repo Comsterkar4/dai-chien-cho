@@ -139,8 +139,7 @@ local function startPetAI(pet, plot, plotId)
     end)
 end
 
--- Khởi động AI cho tất cả cún trong 6 chuồng
-local function -- Khởi động AI cho tất cả cún hiện có và lắng nghe khi có cún mới thả vào vườn
+-- Khởi động AI cho tất cả cún hiện có và lắng nghe khi có cún mới thả vào vườn
 local function initAllRoamingPets()
     for id = 1, 6 do
         local plot = PlayerPlots:FindFirstChild("Plot_" .. id)

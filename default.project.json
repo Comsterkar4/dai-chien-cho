@@ -7,22 +7,34 @@
       "PetServer": {
         "$path": "src/server/PetServer.server.luau"
       },
-      "PlotRoamingPetController": {
-        "$path": "src/server/PlotRoamingPetController.server.luau"
+      "services": {
+        "$path": "src/server/services"
+      },
+      "ai": {
+        "$path": "src/server/ai"
       }
     },
     "ReplicatedStorage": {
       "$className": "ReplicatedStorage",
       "Modules": {
         "$className": "Folder",
+        "Config": {
+          "$path": "src/shared/config"
+        },
+        "Framework": {
+          "$path": "src/shared/framework"
+        },
+        "Network": {
+          "$path": "src/shared/network"
+        },
         "PetConfig": {
-          "$path": "src/shared/PetConfig.luau"
+          "$path": "src/shared/config/PetConfig.luau"
         },
         "UIFramework": {
-          "$path": "src/shared/UIFramework.luau"
+          "$path": "src/shared/framework/UIFramework.luau"
         },
         "Spring": {
-          "$path": "src/shared/Spring.luau"
+          "$path": "src/shared/framework/Spring.luau"
         }
       }
     },
@@ -31,7 +43,7 @@
       "MainHUD": {
         "$className": "ScreenGui",
         "HudController": {
-          "$path": "src/client/HudController.client.luau"
+          "$path": "src/client/controllers/HudController.client.luau"
         }
       }
     }

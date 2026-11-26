@@ -4,7 +4,8 @@ local Debris = game:GetService("Debris")
 local ProximityPromptService = game:GetService("ProximityPromptService")
 
 local Modules = ReplicatedStorage:WaitForChild("Modules")
-local UIFramework = require(Modules:WaitForChild("UIFramework"))
+local FrameworkFolder = Modules:FindFirstChild("Framework") or Modules
+local UIFramework = require(FrameworkFolder:WaitForChild("UIFramework"))
 
 local Events = ReplicatedStorage:WaitForChild("Events")
 local FeedEvent = Events:WaitForChild("FeedPet")
@@ -59,7 +60,7 @@ UIFramework.ApplySpringButton(leashBtn, {HoverScale = 1.08, ClickScale = 0.90, S
 UIFramework.ApplySpringButton(gachaBtn, {HoverScale = 1.08, ClickScale = 0.90, Speed = 30, Damping = 0.65})
 UIFramework.ApplySpringButton(roll1Btn, {HoverScale = 1.05, ClickScale = 0.93, Speed = 28, Damping = 0.70})
 UIFramework.ApplySpringButton(roll5Btn, {HoverScale = 1.05, ClickScale = 0.93, Speed = 28, Damping = 0.70})
-UIFramework.ApplySpringButton(equipBtn, {HoverScale = 1.06, ClickScale = 0.92, Speed = 28, Damping = 0.70})
+UIFramework.ApplySpringButton(resEquip, {HoverScale = 1.06, ClickScale = 0.92, Speed = 28, Damping = 0.70})
 UIFramework.ApplySpringButton(resDismiss, {HoverScale = 1.06, ClickScale = 0.92, Speed = 28, Damping = 0.70})
 UIFramework.ApplySpringButton(closeInvBtn, {HoverScale = 1.15, ClickScale = 0.85, Speed = 32, Damping = 0.60})
 UIFramework.ApplySpringButton(closeGachaBtn, {HoverScale = 1.15, ClickScale = 0.85, Speed = 32, Damping = 0.60})
