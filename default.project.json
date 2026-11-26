@@ -47,6 +47,18 @@
         "$className": "ScreenGui",
         "HudController": {
           "$path": "src/client/controllers/HudController.client.luau"
+        },
+        "hud": {
+          "$path": "src/client/hud"
+        },
+        "inventory": {
+          "$path": "src/client/inventory"
+        },
+        "gacha": {
+          "$path": "src/client/gacha"
+        },
+        "arena": {
+          "$path": "src/client/arena"
         }
       }
     }
