@@ -17,6 +17,7 @@ Quản lý thông tin và sự phát triển của thú cưng do người chơi 
 | [F-01](modules/MD-01-pet-care/F-01-cho-an-tang-cap.md) | Cho ăn và tăng cấp thú cưng | Người chơi | — | 1 | must | — | 0 |
 | [F-02](modules/MD-01-pet-care/F-02-giao-dien-hud.md) | Giao diện HUD thú cưng | Người chơi | — | 1 | must | — | 0 |
 | [F-03](modules/MD-01-pet-care/F-03-hieu-ung-thu-cung.md) | Hiệu ứng phát triển thú cưng | Người chơi | — | 1 | must | — | 0 |
+| [F-04](modules/MD-01-pet-care/F-04-quay-gacha-thu-cung.md) | Vòng quay Gacha thú cưng | Người chơi | — | 2 | should | — | 0 |
 
 ### Quyền
 
@@ -25,6 +26,8 @@ Quản lý thông tin và sự phát triển của thú cưng do người chơi 
 | pet:feed | MD-01 | Người chơi | — |
 | pet:walk | MD-01 | Người chơi | — |
 | pet:bag | MD-01 | Người chơi | — |
+| pet:gacha | MD-01 | Người chơi | — |
+| pet:equip | MD-01 | Người chơi | — |
 
 ### Thực thể
 

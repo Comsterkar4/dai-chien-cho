@@ -40,6 +40,29 @@
 |---|---|---|---|---|---|---|
 | F-01-T04 | F-01 | Kiểm thử tự động luồng cho ăn và tăng cấp | QA | S | must | F-01-T03 |
 
+## Giai đoạn 2
+
+Đường găng (3): F-04-T01 → F-04-T02 → F-04-T04
+
+### Đợt 1
+
+| Task | F | Tên | Loại | Cỡ | Ưu tiên | Sau |
+|---|---|---|---|---|---|---|
+| F-04-T01 | F-04 | Cấu hình 12 giống chó và tỷ lệ 5 cấp độ hiếm | BE | S | should | — |
+
+### Đợt 2
+
+| Task | F | Tên | Loại | Cỡ | Ưu tiên | Sau |
+|---|---|---|---|---|---|---|
+| F-04-T02 | F-04 | Thiết kế giao diện vòng quay GachaModal và kết quả | FE | S | should | F-04-T01 |
+| F-04-T03 | F-04 | Xử lý logic bốc thăm và trang bị thú cưng trên Server | BE | S | should | F-04-T01 |
+
+### Đợt 3
+
+| Task | F | Tên | Loại | Cỡ | Ưu tiên | Sau |
+|---|---|---|---|---|---|---|
+| F-04-T04 | F-04 | Kiểm thử luồng quay Gacha và đổi thú cưng | QA | S | should | F-04-T02, F-04-T03 |
+
 ## Phụ thuộc giữa F
 
 ```mermaid
@@ -47,4 +70,5 @@ graph LR
   F-01
   F-02
   F-03
+  F-04
 ```
