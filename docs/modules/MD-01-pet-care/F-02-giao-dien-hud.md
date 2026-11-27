@@ -17,6 +17,7 @@ Vào từ: SC-01, SC-02
 - **R1** Luôn → hệ thống hiển thị bảng thông tin thú cưng gồm tên, cấp độ và thanh tiến trình kinh nghiệm trực quan theo UI-01.
 - **R2** Luôn → hệ thống hiển thị thanh công cụ xếp dọc ở cạnh phải màn hình gồm các nút hành động theo UI-02 và UI-04.
 - **R3** Khi người chơi bấm nút Túi đồ → hệ thống mở cửa sổ túi đồ hiển thị danh sách vật phẩm theo SC-02.
+- **R4** Luôn → hệ thống hiển thị số dư Xu hiện tại từ Ví Xu (MD-02) qua khung SC-07 nhúng trên màn hình chính SC-01 theo định dạng UI-06 và cập nhật ngay khi số dư thay đổi.
 
 ## Dữ liệu hiển thị
 | Thông tin | Nguồn | Ghi chú |
@@ -43,3 +44,15 @@ Vào từ: SC-01, SC-02
 - Cho: người chơi đang ở màn hình chính
 - Khi: bấm vào nút Túi đồ
 - Thì: cửa sổ túi đồ hiển thị ở giữa màn hình kèm danh sách vật phẩm
+
+### F-02-AC4 · Hiển thị và cập nhật số dư Xu trên HUD
+- Phủ: R4, UI-06 · Kiểm: e2e
+- Cho: người chơi có 100 Xu ở màn hình chính SC-01
+- Khi: số dư Xu tăng thêm 20 Xu
+- Thì: màn hình chính SC-01 hiển thị số dư 120 Xu
+
+## Lịch sử
+
+<!-- pp-kit:history — engine ghi (history.mjs --write), không sửa tay -->
+- 2026-11-27 · CR-01 · F-02-R4 · thêm · hiển thị số dư Xu hiện tại của người chơi trên màn hình chính SC-01 và cập nhật khi số dư thay đổi
+- 2026-11-27 · CR-01 · F-02-AC4 · thêm · kiểm tra hiển thị và cập nhật số dư Xu trên màn hình chính SC-01 khi số dư tăng

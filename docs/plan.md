@@ -40,6 +40,12 @@
 |---|---|---|---|---|---|---|
 | F-01-T04 | F-01 | Kiểm thử tự động luồng cho ăn và tăng cấp | QA | S | must | F-01-T03 |
 
+### Chưa chia task
+
+- F-05 · Ví Xu và tặng Xu khởi đầu
+- F-06 · Kiếm Xu từ hoạt động chăm sóc (chờ F-01, F-05)
+- F-07 · Thú cưng thả vườn tự sinh Xu (chờ F-05)
+
 ## Giai đoạn 2
 
 Đường găng (3): F-04-T01 → F-04-T02 → F-04-T04
@@ -67,7 +73,9 @@
 
 ```mermaid
 graph LR
-  F-01
+  F-01 --> F-06
+  F-05 --> F-06
+  F-05 --> F-07
   F-02
   F-03
   F-04
