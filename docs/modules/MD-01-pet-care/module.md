@@ -54,9 +54,9 @@ Cung cấp cơ chế cho ăn, dắt thú cưng đi dạo, quản lý túi đồ 
 ## Màn hình
 | Mã | Màn hình | App | Ghi chú |
 |---|---|---|---|
-| SC-01 | Giao diện chính MainHUD | . | Chứa thẻ thông tin thú cưng và thanh công cụ cạnh phải |
+| SC-01 | Giao diện chính MainHUD | . | Chứa thẻ thông tin thú cưng, khu vực hiển thị số dư Xu hiện tại và thanh công cụ cạnh phải |
 | SC-02 | Cửa sổ túi đồ InventoryModal | . | Hiển thị danh sách vật phẩm thức ăn và đồ chơi |
-| SC-03 | Cửa sổ quay GachaModal | . | Hiển thị tỷ lệ 5 cấp độ và nút quay x1 x5 |
+| SC-03 | Cửa sổ quay GachaModal | . | Hiển thị tỷ lệ 5 cấp độ và nút quay x1 (100 Xu), x5 (450 Xu) |
 | SC-04 | Cửa sổ kết quả GachaResultPopup | . | Hiển thị thú cưng vừa trúng kèm nút trang bị |
 | SC-05 | Khu chuồng thú cưng 6 người chơi | . | 6 khuôn viên riêng biệt có nhà doghouse, hàng rào và bát ăn |
 | SC-06 | Quảng trường Gacha và Đấu trường Solo | . | Khu vực quay trứng thần bí và võ đài chiến đấu solo |
