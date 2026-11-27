@@ -67,3 +67,55 @@ Cung cấp cơ chế cho ăn, dắt thú cưng đi dạo, quản lý túi đồ 
 
 ## Dùng của mảng khác
 - Đọc số dư và cộng trừ Xu trên thực thể Ví Xu của MD-02 (hiển thị trên SC-01 ở F-02, trừ Xu khi quay Gacha ở F-04, cộng Xu từ chăm sóc ở F-06 và từ thú cưng thả vườn ở F-07).
+
+## Luồng
+### Chăm sóc thú cưng, tích lũy Xu và hiệu ứng phát triển
+
+```mermaid
+flowchart LR
+  Start["Người chơi vào game lần đầu"] --> Init["Khởi tạo thú cưng cấp 1 và hiện SC-01"]
+  Init --> Action{"Chọn hoạt động chăm sóc"}
+  Action -- "Bấm Feed" --> Cooldown{"Hết hồi 0.5 giây?"}
+  Cooldown -- "Không" --> NoCoinFeed["Không cộng Xu, giữ nguyên số dư"]
+  Cooldown -- "Có" --> FeedOk["Cộng 25 EXP, hiệu ứng ăn, cộng 2 Xu"]
+  Action -- "Dùng thức ăn SC-02" --> BagOk["Trừ vật phẩm, cộng EXP, hiệu ứng ăn"]
+  Action -- "Dắt đi dạo SC-05" --> WalkMove{"Di chuyển đủ 3.5 giây?"}
+  WalkMove -- "Không" --> NoCoinWalk["Không cộng Xu, giữ nguyên số dư"]
+  WalkMove -- "Có" --> WalkOk["Cộng 15 EXP, cộng 3 Xu"]
+  FeedOk --> CheckExp{"EXP đạt ngưỡng thăng cấp?"}
+  BagOk --> CheckExp
+  WalkOk --> CheckExp
+  CheckExp -- "Có" --> LevelUp["Thăng cấp, hiệu ứng ánh sáng, cộng 15 Xu"]
+  CheckExp -- "Không" --> UpdateHud["Cập nhật EXP, cấp độ và số dư Xu trên SC-01"]
+  LevelUp --> UpdateHud
+```
+
+1. Người chơi gia nhập game lần đầu; hệ thống khởi tạo thú cưng cấp 1 và hiển thị thông tin cùng số dư Xu trên SC-01 (F-01, F-01-R1, TR-01, F-02, F-02-R1, F-02-R4).
+2. Khi Người chơi bấm nút Feed ngoài thời gian hồi 0.5 giây trên SC-01, hệ thống cộng 25 EXP, phát hiệu ứng hạt thức ăn và cộng 2 Xu vào Ví Xu; nếu bấm trong thời gian hồi thì không cộng Xu (F-01, F-01-R2, F-03, F-03-R1, F-06, F-06-R1, F-06-R4, TR-04).
+3. Khi Người chơi mở SC-02 và dùng vật phẩm thức ăn, hệ thống trừ vật phẩm, cộng EXP và phát hiệu ứng hạt thức ăn, không cộng Xu Feed trực tiếp (F-02, F-02-R3, F-01, F-01-R5, F-03, F-03-R1, F-06, F-06-R6).
+4. Khi Người chơi bật dây dắt thú cưng và di chuyển liên tục đủ 3.5 giây trong SC-05, hệ thống cộng 15 EXP và cộng 3 Xu vào Ví Xu; nếu đứng yên hoặc tắt dây dắt trước 3.5 giây thì không cộng Xu (F-01, F-01-R4, F-06, F-06-R3, F-06-R5, TR-04).
+5. Khi điểm EXP đạt ngưỡng thăng cấp, thú cưng chuyển sang cấp mới, phát cột ánh sáng vàng và cộng thêm 15 Xu thưởng thăng cấp vào Ví Xu; nếu mất kết nối máy chủ thì không ghi nhận giao dịch cộng Xu ở máy khách (F-01, F-01-R3, TR-02, F-03, F-03-R2, F-06, F-06-R2, F-06-R7, TR-04).
+6. Giao diện SC-01 và SC-07 cập nhật cấp độ, thanh tiến trình EXP và số dư Xu mới nhất cho Người chơi (F-02, F-02-R1, F-02-R4, F-06).
+
+### Sinh Xu thả vườn và quay Gacha nhận thú cưng mới
+
+```mermaid
+flowchart LR
+  Garden["Người chơi ở khu chuồng riêng SC-05"] --> HasPet{"Có thú cưng Đang thả vườn?"}
+  HasPet -- "Không" --> NoSpawn["Không sinh Xu, giữ nguyên số dư"]
+  HasPet -- "Có" --> Cycle["Hết chu kỳ 15 giây sinh Xu"]
+  Cycle --> SyncOk{"Đồng bộ Ví Xu thành công?"}
+  SyncOk -- "Không" --> SyncErr["Giữ nguyên số dư, hiện thông báo lỗi"]
+  SyncOk -- "Có" --> AddCoin["Cộng Xu vào Ví Xu, cập nhật SC-01"]
+  AddCoin --> OpenGacha["Mở SC-03 từ SC-01 hoặc SC-06 và bấm Quay"]
+  OpenGacha --> Enough{"Đủ Xu cho lượt quay?"}
+  Enough -- "Không" --> NotEnough["Không quay, giữ nguyên số dư, hiện thông báo"]
+  Enough -- "Có" --> Roll["Trừ Xu, bốc thăm thú cưng, mở SC-04"]
+  Roll --> Equip["Người chơi bấm Trang bị ngay"]
+```
+
+1. Khi Người chơi ở trong phòng game tại SC-05 và có ít nhất một thú cưng Đang thả vườn, cứ hết mỗi chu kỳ 15 giây hệ thống cộng Xu vào Ví Xu và cập nhật số dư trên SC-01 và SC-07; nếu đồng bộ Ví Xu thất bại thì giữ nguyên số dư và hiện thông báo F-07-M1 (F-07, F-07-R1, F-07-R2, F-07-R6, TR-04, F-02, F-02-R4).
+2. Nếu không có thú cưng Đang thả vườn hoặc Người chơi thoát phòng game, hệ thống không sinh Xu hoặc dừng bộ đếm chu kỳ hiện tại (F-07, F-07-R3, F-07-R5).
+3. Người chơi mở cửa sổ quay Gacha SC-03 từ SC-01 hoặc SC-06 và chọn Quay 1 lần hoặc Quay 5 lần; nếu không đủ Xu thì hệ thống giữ nguyên số dư và hiện thông báo F-04-M1 (F-04, F-04-R4).
+4. Khi đủ Xu, hệ thống trừ Xu trong Ví Xu, bốc thăm ngẫu nhiên 1 hoặc 5 thú cưng, cập nhật số dư trên SC-01 và mở cửa sổ kết quả SC-04 (F-04, F-04-R1, F-04-R2, TR-05, F-02, F-02-R4).
+5. Tại SC-04, Người chơi bấm Trang bị ngay để đổi thú cưng đồng hành theo sau nhân vật (F-04, F-04-R3).
