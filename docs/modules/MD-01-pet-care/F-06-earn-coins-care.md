@@ -96,3 +96,9 @@ Cho dev: logic cộng Xu của R1, R2 và R3 phải thực hiện phía máy ch�
 
 ### Giả định
 - Nếu một hành động làm thú cưng tăng nhiều cấp liên tiếp thì thưởng Xu thăng cấp được tính cho từng cấp đã tăng.
+
+## Lịch sử
+
+<!-- pp-kit:history — engine ghi (history.mjs --write), không sửa tay -->
+- 2026-11-27 · quyết định · Dùng vật phẩm thức ăn từ túi đồ SC-02 có được cộng Xu như bấm nút Feed không? · Không cộng Xu trực tiếp, chỉ cộng Xu thăng cấp nếu đủ EXP
+- 2026-11-27 · quyết định · Mức thưởng Xu cụ thể cho mỗi lần bấm Feed, mỗi lần thăng cấp và mỗi chu kỳ 3.5 giây dắt đi dạo là bao nhiêu? · Feed +2 Xu, thăng cấp +15 Xu, đi dạo +3 Xu mỗi 3.5 giây

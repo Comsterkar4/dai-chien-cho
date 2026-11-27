@@ -50,3 +50,9 @@ Vào từ: SC-01, SC-02
 - Cho: người chơi có 100 Xu ở màn hình chính SC-01
 - Khi: số dư Xu tăng thêm 20 Xu
 - Thì: màn hình chính SC-01 hiển thị số dư 120 Xu
+
+## Lịch sử
+
+<!-- pp-kit:history — engine ghi (history.mjs --write), không sửa tay -->
+- 2026-11-27 · CR-01 · F-02-R4 · thêm · hiển thị số dư Xu hiện tại của người chơi trên màn hình chính SC-01 và cập nhật khi số dư thay đổi
+- 2026-11-27 · CR-01 · F-02-AC4 · thêm · kiểm tra hiển thị và cập nhật số dư Xu trên màn hình chính SC-01 khi số dư tăng

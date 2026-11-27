@@ -67,3 +67,14 @@ Vào từ: SC-01, SC-06, nút Gacha trên thanh công cụ hoặc SC-03
 - Cho: người chơi có 300 Xu và mở cửa sổ Gacha
 - Khi: bấm nút Quay 5 lần
 - Thì: hệ thống không thực hiện lượt quay, số dư giữ nguyên 300 Xu và hiện "Không đủ Xu để thực hiện lượt quay này."
+
+## Lịch sử
+
+<!-- pp-kit:history — engine ghi (history.mjs --write), không sửa tay -->
+- 2026-11-27 · CR-01 · F-04-R1 · sửa · trừ 100 Xu khi quay 1 lần hoặc 450 Xu khi quay 5 lần trong Ví Xu khi đủ Xu trước khi bốc thăm thú cưng theo BR-06
+- 2026-11-27 · CR-01 · F-04-R4 · thêm · không thực hiện lượt quay, giữ nguyên số dư Xu và hiện M1 khi người chơi không đủ Xu cho lượt quay đã chọn
+- 2026-11-27 · CR-01 · F-04-M1 · thêm · thông báo "Không đủ Xu để thực hiện lượt quay này." khi không đủ Xu
+- 2026-11-27 · CR-01 · F-04-AC1 · sửa · kiểm tra quay 1 lần trừ 100 Xu (100 Xu còn 0 Xu) và trả về 1 chú chó thuộc 1 trong 5 cấp độ hiếm
+- 2026-11-27 · CR-01 · F-04-AC4 · thêm · kiểm tra quay 5 lần trừ 450 Xu (500 Xu còn 50 Xu) và trả về 5 chú chó ngẫu nhiên
+- 2026-11-27 · CR-01 · F-04-AC5 · thêm · kiểm tra không đủ Xu khi quay 1 lần (50 Xu) thì giữ nguyên số dư và hiện M1
+- 2026-11-27 · CR-01 · F-04-AC6 · thêm · kiểm tra không đủ Xu khi quay 5 lần (300 Xu) thì giữ nguyên số dư và hiện M1

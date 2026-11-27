@@ -17,25 +17,40 @@ Quản lý thông tin và sự phát triển của thú cưng do người chơi 
 | [F-01](modules/MD-01-pet-care/F-01-cho-an-tang-cap.md) | Cho ăn và tăng cấp thú cưng | Người chơi | — | 1 | must | — | 0 |
 | [F-02](modules/MD-01-pet-care/F-02-giao-dien-hud.md) | Giao diện HUD thú cưng | Người chơi | — | 1 | must | — | 0 |
 | [F-03](modules/MD-01-pet-care/F-03-hieu-ung-thu-cung.md) | Hiệu ứng phát triển thú cưng | Người chơi | — | 1 | must | — | 0 |
+| [F-06](modules/MD-01-pet-care/F-06-earn-coins-care.md) | Kiếm Xu từ hoạt động chăm sóc | Người chơi | — | 1 | must | F-01, F-05 | 0 |
+| [F-07](modules/MD-01-pet-care/F-07-garden-coin-income.md) | Thú cưng thả vườn tự sinh Xu | Người chơi | — | 1 | must | F-05 | 0 |
 | [F-04](modules/MD-01-pet-care/F-04-quay-gacha-thu-cung.md) | Vòng quay Gacha thú cưng | Người chơi | — | 2 | should | — | 0 |
+
+### [MD-02](modules/MD-02-coin-economy/module.md) · Kinh tế Xu
+
+Quản lý đơn vị tiền tệ Xu, khởi tạo số dư ban đầu và ghi nhận cộng trừ số dư Xu của người chơi.
+
+| F | Tên | Vai | App | Giai đoạn | Ưu tiên | Phụ thuộc | Câu hỏi mở |
+|---|---|---|---|---|---|---|---|
+| [F-05](modules/MD-02-coin-economy/F-05-coin-wallet.md) | Ví Xu và tặng Xu khởi đầu | Người chơi | — | 1 | must | — | 0 |
 
 ### Quyền
 
 | Quyền | Mảng | Vai | F |
 |---|---|---|---|
-| pet:feed | MD-01 | Người chơi | — |
-| pet:walk | MD-01 | Người chơi | — |
-| pet:bag | MD-01 | Người chơi | — |
+| pet:feed | MD-01 | Người chơi | F-06 |
+| pet:walk | MD-01 | Người chơi | F-06 |
+| pet:bag | MD-01 | Người chơi | F-06 |
 | pet:gacha | MD-01 | Người chơi | — |
 | pet:equip | MD-01 | Người chơi | — |
-| pet:roam | MD-01 | Người chơi | — |
-| plot:claim | MD-01 | Người chơi | — |
+| pet:roam | MD-01 | Người chơi | F-07 |
+| plot:claim | MD-01 | Người chơi | F-07 |
 
 ### Thực thể
 
 | Thực thể | Mảng | Chuyển trạng thái |
 |---|---|---|
 | Thú cưng | MD-01 | TR-01, TR-02 |
+| Ví Xu | MD-02 | TR-03, TR-04, TR-05 |
+
+### Thay đổi gần đây
+
+- CR-01 (2026-11-27): Bổ sung hiển thị số dư Xu trên HUD và trừ Xu khi quay Gacha → F-02, F-04, SC-01, SC-03
 <!-- pp-kit:map:end -->
 
 ## Đọc gì trước

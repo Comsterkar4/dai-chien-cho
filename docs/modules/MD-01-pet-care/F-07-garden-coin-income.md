@@ -91,3 +91,9 @@ Cho dev: bộ đếm chu kỳ sinh Xu phải chạy ở phía server để trán
 ### Giả định
 - Xu thả vườn chỉ sinh khi người chơi đang trực tuyến trong phòng game và đang sở hữu khu chuồng riêng; không tính tích lũy Xu ngoại tuyến.
 - Trong đợt này không áp dụng cơ chế chống treo máy (AFK), không giới hạn tốc độ nhận Xu và không áp dụng hệ số nhân Xu theo độ hiếm theo phạm vi tầm nhìn sản phẩm.
+
+## Lịch sử
+
+<!-- pp-kit:history — engine ghi (history.mjs --write), không sửa tay -->
+- 2026-11-27 · quyết định · Mỗi thú cưng đang thả trong vườn tự sinh bao nhiêu Xu và theo chu kỳ bao nhiêu giây? · 2 Xu mỗi thú cưng mỗi 15 giây
+- 2026-11-27 · quyết định · Thú cưng đang được trang bị đồng hành cùng người chơi theo BR-07 có đồng thời giữ trạng thái Đang thả vườn để sinh Xu không? · Không, chỉ thú cưng ở trong vườn riêng mới sinh Xu
