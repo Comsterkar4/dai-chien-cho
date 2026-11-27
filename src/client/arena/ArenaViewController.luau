@@ -125,7 +125,11 @@ local function showBattleResult(mainHud: ScreenGui, result: {isVictory: boolean,
     desc.Position = UDim2.new(0, 20, 0, 75)
     desc.BackgroundTransparency = 1
     if isVic then
-        desc.Text = string.format("Hạ gục thành công %s!\n\n✨ Nhận: +%d EXP  •  💰 +%d Vàng", result.bossName, result.rewardExp or 0, result.rewardGold or 0)
+        if result.rewardGold and result.rewardGold > 0 then
+            desc.Text = string.format("Hạ gục thành công %s!\n\n✨ Nhận: +%d EXP  •  💰 +%d Vàng", result.bossName, result.rewardExp or 0, result.rewardGold)
+        else
+            desc.Text = string.format("Hạ gục thành công %s!\n\n✨ Nhận: +%d EXP", result.bossName, result.rewardExp or 0)
+        end
     else
         desc.Text = string.format("Thú cưng đã bị %s áp đảo!\nHãy cho cún ăn để nâng cấp và phục thù nhé!\n\n✨ Nhận an ủi: +%d EXP", result.bossName, result.rewardExp or 15)
     end
@@ -146,6 +150,73 @@ local function showBattleResult(mainHud: ScreenGui, result: {isVictory: boolean,
     okBtn.Parent = modal
 
     WebStyleEngine.StyleButton(okBtn, isVic and "Gold" or "Danger", 14)
+    UIFramework.ApplySpringButton(okBtn, {HoverScale = 1.08, ClickScale = 0.90, Speed = 30, Damping = 0.65})
+
+    okBtn.MouseButton1Click:Connect(function()
+        UIFramework.SpringCloseModal(modal)
+        task.wait(0.5)
+        modal:Destroy()
+    end)
+
+    UIFramework.SpringOpenModal(modal)
+end
+
+-- Hiển thị thông báo từ chối khiêu chiến (tách biệt với kết quả thua trận)
+local function showBattleRejection(mainHud: ScreenGui, message: string, UIFramework: any, WebStyleEngine: any)
+    local existing = mainHud:FindFirstChild("BattleRejectionModal")
+    if existing then existing:Destroy() end
+
+    local modal = Instance.new("Frame")
+    modal.Name = "BattleRejectionModal"
+    modal.Size = UDim2.new(0, 400, 0, 220)
+    modal.Position = UDim2.new(0.5, 0, 0.5, 0)
+    modal.AnchorPoint = Vector2.new(0.5, 0.5)
+    modal.ZIndex = 50
+    modal.Parent = mainHud
+
+    WebStyleEngine.ApplyGlassmorphism(modal, {
+        BorderRadius = 24,
+        BackgroundColor = Color3.fromRGB(20, 18, 30),
+        Transparency = 0.05,
+        BorderColor = Color3.fromRGB(245, 158, 11),
+        BorderTransparency = 0.2,
+        BorderWidth = 2.5
+    })
+
+    local title = Instance.new("TextLabel")
+    title.Size = UDim2.new(1, 0, 0, 42)
+    title.Position = UDim2.new(0, 0, 0, 18)
+    title.BackgroundTransparency = 1
+    title.Text = "⚠️ KHÔNG THỂ KHIÊU CHIẾN"
+    title.TextColor3 = Color3.fromRGB(245, 158, 11)
+    title.Font = Enum.Font.FredokaOne
+    title.TextSize = 20
+    title.ZIndex = 51
+    title.Parent = modal
+
+    local desc = Instance.new("TextLabel")
+    desc.Size = UDim2.new(1, -40, 0, 70)
+    desc.Position = UDim2.new(0, 20, 0, 68)
+    desc.BackgroundTransparency = 1
+    desc.Text = message
+    desc.TextWrapped = true
+    desc.TextColor3 = Color3.fromRGB(230, 225, 240)
+    desc.Font = Enum.Font.GothamMedium
+    desc.TextSize = 14
+    desc.ZIndex = 51
+    desc.Parent = modal
+
+    local okBtn = Instance.new("TextButton")
+    okBtn.Size = UDim2.new(0, 140, 0, 40)
+    okBtn.Position = UDim2.new(0.5, -70, 1, -58)
+    okBtn.Text = "ĐÓNG"
+    okBtn.TextColor3 = Color3.fromRGB(255, 255, 255)
+    okBtn.Font = Enum.Font.FredokaOne
+    okBtn.TextSize = 14
+    okBtn.ZIndex = 51
+    okBtn.Parent = modal
+
+    WebStyleEngine.StyleButton(okBtn, "Gold", 14)
     UIFramework.ApplySpringButton(okBtn, {HoverScale = 1.08, ClickScale = 0.90, Speed = 30, Damping = 0.65})
 
     okBtn.MouseButton1Click:Connect(function()
@@ -243,6 +314,18 @@ function ArenaViewController.Init(mainHud: ScreenGui, UIFramework: any, WebStyle
             UIFramework.SpringCloseModal(arenaModal)
         end)
     end
+
+    -- Lắng nghe cập nhật / từ chối khiêu chiến
+    BattleUpdateEvent.OnClientEvent:Connect(function(payload)
+        if type(payload) == "table" and payload.state == "Rejected" then
+            showBattleRejection(
+                mainHud,
+                tostring(payload.message or "Không thể bắt đầu trận đấu lúc này!"),
+                UIFramework,
+                WebStyleEngine
+            )
+        end
+    end)
 
     -- Lắng nghe kết thúc trận đấu
     BattleFinishEvent.OnClientEvent:Connect(function(result)

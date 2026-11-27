@@ -30,6 +30,7 @@ local EquipPetEvent = Events:WaitForChild("EquipPet")
 local lastRolledPetId: string? = nil
 local isRolling = false
 local rollToken = 0
+local activeEggTween: Tween? = nil
 
 --==================================================
 -- CUTE PET PASTEL COLOR PALETTE
@@ -238,12 +239,47 @@ end
 -- EGG ANIMATION
 --==================================================
 
+local function cancelActiveEggTween()
+    if activeEggTween then
+        activeEggTween:Cancel()
+        activeEggTween = nil
+    end
+end
+
+local function restoreEggPose(
+    eggGraphic: GuiObject,
+    neutralPosition: UDim2,
+    neutralRotation: number,
+    animated: boolean
+)
+    cancelActiveEggTween()
+
+    if animated then
+        local tween = TweenService:Create(
+            eggGraphic,
+            TweenInfo.new(0.2, Enum.EasingStyle.Back),
+            {
+                Position = neutralPosition,
+                Rotation = neutralRotation,
+            }
+        )
+        activeEggTween = tween
+        tween:Play()
+    else
+        eggGraphic.Position = neutralPosition
+        eggGraphic.Rotation = neutralRotation
+    end
+end
+
 local function playEggShakeAnimation(
     eggGraphic: GuiObject,
-    currentToken: number
+    currentToken: number,
+    neutralPosition: UDim2,
+    neutralRotation: number
 )
-    local originalPosition = eggGraphic.Position
-    local originalRotation = eggGraphic.Rotation
+    cancelActiveEggTween()
+    eggGraphic.Position = neutralPosition
+    eggGraphic.Rotation = neutralRotation
 
     local shakeCount = 16
 
@@ -255,11 +291,12 @@ local function playEggShakeAnimation(
         local direction = (i % 2 == 0) and 1 or -1
         local intensity = math.min(i * 1.5, 14)
 
-        local targetPosition = originalPosition
+        local targetPosition = neutralPosition
             + UDim2.fromOffset(direction * intensity, 0)
 
-        local targetRotation = direction * 10
+        local targetRotation = neutralRotation + direction * 10
 
+        cancelActiveEggTween()
         local tween = TweenService:Create(
             eggGraphic,
             TweenInfo.new(
@@ -273,19 +310,13 @@ local function playEggShakeAnimation(
             }
         )
 
+        activeEggTween = tween
         tween:Play()
         task.wait(0.055)
     end
 
     if currentToken == rollToken then
-        TweenService:Create(
-            eggGraphic,
-            TweenInfo.new(0.2, Enum.EasingStyle.Back),
-            {
-                Position = originalPosition,
-                Rotation = originalRotation,
-            }
-        ):Play()
+        restoreEggPose(eggGraphic, neutralPosition, neutralRotation, true)
     end
 end
 
@@ -367,6 +398,8 @@ function GachaViewController.Init(
 
     local eggGraphic =
         stage:WaitForChild("EggGraphic") :: GuiObject
+    local neutralEggPosition = eggGraphic.Position
+    local neutralEggRotation = eggGraphic.Rotation
 
     local stageDesc =
         stage:WaitForChild("StageDesc") :: TextLabel
@@ -595,7 +628,9 @@ function GachaViewController.Init(
         task.spawn(
             playEggShakeAnimation,
             eggGraphic,
-            currentToken
+            currentToken,
+            neutralEggPosition,
+            neutralEggRotation
         )
 
         RollGachaEvent:FireServer(amount)
@@ -609,6 +644,7 @@ function GachaViewController.Init(
 
             isRolling = false
             rollToken += 1
+            restoreEggPose(eggGraphic, neutralEggPosition, neutralEggRotation, false)
 
             roll1Btn.Active = true
             roll5Btn.Active = true
@@ -640,6 +676,7 @@ function GachaViewController.Init(
 
         isRolling = false
         rollToken += 1
+        restoreEggPose(eggGraphic, neutralEggPosition, neutralEggRotation, false)
 
         roll1Btn.Active = true
         roll5Btn.Active = true

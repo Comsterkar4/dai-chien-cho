@@ -8,6 +8,7 @@ local Debris = game:GetService("Debris")
 local Modules = ReplicatedStorage:WaitForChild("Modules")
 local ConfigFolder = Modules:FindFirstChild("Config") or Modules
 local PetConfig = require(ConfigFolder:WaitForChild("PetConfig"))
+local PetModels = ReplicatedStorage:WaitForChild("PetModels")
 
 local BattleService = {}
 
@@ -16,7 +17,7 @@ local BOSS_DATA = {
     corgi_boss = {
         name = "Corgi Tốc Độ",
         icon = "🦊",
-        petModelId = "corgi",
+        petModelId = "Corgi",
         level = 3,
         power = 18,
         hp = 120,
@@ -27,7 +28,7 @@ local BOSS_DATA = {
     husky_boss = {
         name = "Husky Băng Giá",
         icon = "🐺",
-        petModelId = "husky",
+        petModelId = "Husky",
         level = 8,
         power = 45,
         hp = 280,
@@ -38,7 +39,7 @@ local BOSS_DATA = {
     tibetan_boss = {
         name = "Ngao Tây Tạng Vương",
         icon = "🦁",
-        petModelId = "shiba", -- fallback nếu chưa có model riêng
+        petModelId = "Shiba", -- fallback nếu chưa có model riêng
         level = 15,
         power = 110,
         hp = 650,
@@ -51,6 +52,63 @@ local BOSS_DATA = {
 -- Trạng thái đấu trường
 local arenaBusy = false
 local currentBattler: Player? = nil
+local activeBattleFolder: Folder? = nil
+local battleSessionId = 0
+
+local function releaseArena(sessionId: number?)
+    if sessionId ~= nil and sessionId ~= battleSessionId then
+        return
+    end
+    if activeBattleFolder then
+        activeBattleFolder:Destroy()
+        activeBattleFolder = nil
+    end
+    arenaBusy = false
+    currentBattler = nil
+end
+
+Players.PlayerRemoving:Connect(function(leavingPlayer: Player)
+    if currentBattler == leavingPlayer then
+        battleSessionId += 1
+        releaseArena(nil)
+    end
+end)
+
+-- Tạo bản sao mô hình thú cưng neo cố định cho Đấu trường (không có AlignPosition/AlignOrientation bám theo người chơi)
+local function spawnBattleModel(petId: string, modelName: string, spawnCFrame: CFrame, parent: Instance): Model?
+    local template = PetModels:FindFirstChild(petId) or PetModels:FindFirstChild("Shiba")
+    if not template or not template:IsA("Model") then
+        return nil
+    end
+
+    local clone = template:Clone()
+    clone.Name = modelName
+
+    -- Loại bỏ mọi ràng buộc bám theo người chơi nếu có
+    for _, desc in ipairs(clone:GetDescendants()) do
+        if desc:IsA("AlignPosition") or desc:IsA("AlignOrientation") or desc:IsA("Beam") then
+            desc:Destroy()
+        end
+    end
+
+    local primary = clone.PrimaryPart or clone:FindFirstChildWhichIsA("BasePart")
+    if not primary then
+        clone:Destroy()
+        return nil
+    end
+    clone.PrimaryPart = primary
+
+    for _, desc in ipairs(clone:GetDescendants()) do
+        if desc:IsA("BasePart") then
+            desc.CanCollide = false
+            desc.Anchored = (desc == primary)
+        end
+    end
+
+    clone.Parent = parent
+    clone:PivotTo(spawnCFrame)
+    return clone
+end
 
 -- Tọa độ sàn đấu (trùng khớp với RedCornerPad và BlueCornerPad trong BattleZone)
 local RED_CORNER_POS = Vector3.new(88.0, 4.2, 21.0)
@@ -199,38 +257,51 @@ function BattleService.StartBattle(player: Player, bossId: string, PetService: a
         return false, "Bạn chưa có thú cưng nào đồng hành!"
     end
 
+    local char = player.Character
+    local root = char and char:FindFirstChild("HumanoidRootPart")
+    if player.Parent ~= Players or not char or not root then
+        return false, "Nhân vật của bạn chưa sẵn sàng để khiêu chiến!"
+    end
+
     arenaBusy = true
     currentBattler = player
+    battleSessionId += 1
+    local sessionId = battleSessionId
 
     local events = NetworkEvents.Init()
     local BattleUpdateEvent = events["BattleUpdate"]
     local BattleFinishEvent = events["BattleFinish"]
+    local UpdatePetDataEvent = events["UpdatePetData"]
 
     -- Tạo thư mục chứa các đối tượng chiến đấu trong Đấu trường
     local battleFolder = Instance.new("Folder")
     battleFolder.Name = "ActiveBattleArena"
     battleFolder.Parent = workspace
+    activeBattleFolder = battleFolder
 
-    -- 1. Sinh mô hình Thú cưng người chơi tại Góc Đỏ
-    local challengerModel = PetService.SpawnPlayerPet(player, pData.currentPetId)
+    -- 1. Sinh mô hình Thú cưng người chơi tại Góc Đỏ (neo cố định, không bám theo người chơi)
+    local challengerModel = spawnBattleModel(
+        pData.currentPetId,
+        "ChallengerPet",
+        CFrame.new(RED_CORNER_POS, BLUE_CORNER_POS),
+        battleFolder
+    )
     if not challengerModel then
-        arenaBusy = false
-        currentBattler = nil
-        battleFolder:Destroy()
+        releaseArena(sessionId)
         return false, "Không thể khởi tạo thú cưng chiến đấu!"
     end
-    challengerModel.Name = "ChallengerPet"
-    challengerModel.Parent = battleFolder
-    challengerModel:PivotTo(CFrame.new(RED_CORNER_POS, BLUE_CORNER_POS))
 
-    -- 2. Sinh mô hình Boss tại Góc Xanh
-    local bossModel = PetService.SpawnPlayerPet(player, boss.petModelId)
+    -- 2. Sinh mô hình Boss tại Góc Xanh (neo cố định, không bám theo người chơi)
+    local bossModel = spawnBattleModel(
+        boss.petModelId,
+        "BossPet",
+        CFrame.new(BLUE_CORNER_POS, RED_CORNER_POS),
+        battleFolder
+    )
     if not bossModel then
-        bossModel = challengerModel:Clone()
+        releaseArena(sessionId)
+        return false, "Không thể khởi tạo mô hình Boss chiến đấu!"
     end
-    bossModel.Name = "BossPet"
-    bossModel.Parent = battleFolder
-    bossModel:PivotTo(CFrame.new(BLUE_CORNER_POS, RED_CORNER_POS))
 
     -- 3. Tạo thanh máu trên đầu cả 2 pet
     local playerMaxHp = math.floor(100 + (pData.level - 1) * 25 + pData.power * 2)
@@ -245,9 +316,7 @@ function BattleService.StartBattle(player: Player, bossId: string, PetService: a
     local bPrimary = bossModel.PrimaryPart or bossModel:FindFirstChildWhichIsA("BasePart")
 
     if not pPrimary or not bPrimary then
-        arenaBusy = false
-        currentBattler = nil
-        battleFolder:Destroy()
+        releaseArena(sessionId)
         return false, "Lỗi vật thể thú cưng không hợp lệ!"
     end
 
@@ -267,6 +336,10 @@ function BattleService.StartBattle(player: Player, bossId: string, PetService: a
     -- 4. Chạy vòng lặp chiến đấu thời gian thực (Real-time Combat Loop)
     task.spawn(function()
         task.wait(1.5)
+        if sessionId ~= battleSessionId or player.Parent ~= Players or not challengerModel.Parent or not bossModel.Parent then
+            releaseArena(sessionId)
+            return
+        end
 
         -- Di chuyển 2 pet về cự ly giáp chiến trung tâm
         local pCombatPos = ARENA_CENTER_POS + Vector3.new(-4.5, 0, 0)
@@ -282,7 +355,7 @@ function BattleService.StartBattle(player: Player, bossId: string, PetService: a
         local isGameOver = false
         local isVictory = false
 
-        while not isGameOver and challengerModel.Parent and bossModel.Parent do
+        while not isGameOver and sessionId == battleSessionId and player.Parent == Players and challengerModel.Parent and bossModel.Parent do
             round += 1
 
             -- LƯỢT 1: Thú cưng người chơi tấn công Boss
@@ -294,6 +367,10 @@ function BattleService.StartBattle(player: Player, bossId: string, PetService: a
             local lungeP = TweenService:Create(pPrimary, TweenInfo.new(0.18, Enum.EasingStyle.Quad), {CFrame = CFrame.new(pCombatPos + Vector3.new(2.5, 0.5, 0), bCombatPos)})
             lungeP:Play()
             task.wait(0.2)
+            if sessionId ~= battleSessionId or player.Parent ~= Players or not challengerModel.Parent or not bossModel.Parent then
+                releaseArena(sessionId)
+                return
+            end
             local backP = TweenService:Create(pPrimary, TweenInfo.new(0.22, Enum.EasingStyle.Back), {CFrame = CFrame.new(pCombatPos, bCombatPos)})
             backP:Play()
 
@@ -319,6 +396,10 @@ function BattleService.StartBattle(player: Player, bossId: string, PetService: a
             end
 
             task.wait(0.7)
+            if sessionId ~= battleSessionId or player.Parent ~= Players or not challengerModel.Parent or not bossModel.Parent then
+                releaseArena(sessionId)
+                return
+            end
 
             -- LƯỢT 2: Boss tấn công lại Thú cưng người chơi
             local isCritB = math.random() < 0.18
@@ -328,6 +409,10 @@ function BattleService.StartBattle(player: Player, bossId: string, PetService: a
             local lungeB = TweenService:Create(bPrimary, TweenInfo.new(0.18, Enum.EasingStyle.Quad), {CFrame = CFrame.new(bCombatPos + Vector3.new(-2.5, 0.5, 0), pCombatPos)})
             lungeB:Play()
             task.wait(0.2)
+            if sessionId ~= battleSessionId or player.Parent ~= Players or not challengerModel.Parent or not bossModel.Parent then
+                releaseArena(sessionId)
+                return
+            end
             local backB = TweenService:Create(bPrimary, TweenInfo.new(0.22, Enum.EasingStyle.Back), {CFrame = CFrame.new(bCombatPos, pCombatPos)})
             backB:Play()
 
@@ -354,47 +439,69 @@ function BattleService.StartBattle(player: Player, bossId: string, PetService: a
             task.wait(0.8)
         end
 
+        if sessionId ~= battleSessionId or player.Parent ~= Players then
+            releaseArena(sessionId)
+            return
+        end
+
         -- XỬ LÝ KẾT THÚC TRẬN ĐẤU (Game Over / Victory Ceremony)
         if isVictory then
             -- Boss ngã gục
             TweenService:Create(bPrimary, TweenInfo.new(0.4), {CFrame = bPrimary.CFrame * CFrame.Angles(0, 0, math.rad(90))}):Play()
             -- Thú cưng chiến thắng nhảy cẫng lên ăn mừng
+            local baseCFrame = pPrimary.CFrame
             for _ = 1, 3 do
-                local jumpUp = TweenService:Create(pPrimary, TweenInfo.new(0.25, Enum.EasingStyle.Quad), {Position = pPrimary.Position + Vector3.new(0, 3, 0)})
+                if sessionId ~= battleSessionId or player.Parent ~= Players then
+                    releaseArena(sessionId)
+                    return
+                end
+                local jumpUp = TweenService:Create(pPrimary, TweenInfo.new(0.25, Enum.EasingStyle.Quad), {CFrame = baseCFrame + Vector3.new(0, 3, 0)})
                 jumpUp:Play()
                 task.wait(0.25)
-                local jumpDown = TweenService:Create(pPrimary, TweenInfo.new(0.25, Enum.EasingStyle.Bounce), {Position = pPrimary.Position - Vector3.new(0, 3, 0)})
+                if sessionId ~= battleSessionId or player.Parent ~= Players then
+                    releaseArena(sessionId)
+                    return
+                end
+                local jumpDown = TweenService:Create(pPrimary, TweenInfo.new(0.25, Enum.EasingStyle.Bounce), {CFrame = baseCFrame})
                 jumpDown:Play()
                 task.wait(0.25)
             end
             spawnVictoryConfetti(pPrimary.Position + Vector3.new(0, 4, 0))
 
-            -- Trao thưởng cho người chơi
+            -- Trao thưởng cho người chơi và đồng bộ lại dữ liệu thú cưng
             PetService.AddExp(player, boss.rewardExp)
-            
+            local updatedPayload = PetService.GetPetPayload(player)
+            if updatedPayload and UpdatePetDataEvent then
+                UpdatePetDataEvent:FireClient(player, updatedPayload)
+            end
+
             BattleFinishEvent:FireClient(player, {
                 isVictory = true,
                 bossName = boss.name,
                 rewardExp = boss.rewardExp,
-                rewardGold = boss.rewardGold,
             })
         else
             -- Thú cưng người chơi ngã gục
             TweenService:Create(pPrimary, TweenInfo.new(0.4), {CFrame = pPrimary.CFrame * CFrame.Angles(0, 0, math.rad(90))}):Play()
 
+            -- Trao EXP an ủi và đồng bộ lại dữ liệu thú cưng
+            local consolationExp = 15
+            PetService.AddExp(player, consolationExp)
+            local updatedPayload = PetService.GetPetPayload(player)
+            if updatedPayload and UpdatePetDataEvent then
+                UpdatePetDataEvent:FireClient(player, updatedPayload)
+            end
+
             BattleFinishEvent:FireClient(player, {
                 isVictory = false,
                 bossName = boss.name,
-                rewardExp = 15,
-                rewardGold = 0,
+                rewardExp = consolationExp,
             })
         end
 
         -- Dọn dẹp sàn đấu sau 3.5 giây
         task.wait(3.5)
-        battleFolder:Destroy()
-        arenaBusy = false
-        currentBattler = nil
+        releaseArena(sessionId)
     end)
 
     return true, "Trận đấu bắt đầu!"

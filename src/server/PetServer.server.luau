@@ -31,6 +31,7 @@ local GachaResultEvent = events["GachaResult"]
 local EquipPetEvent = events["EquipPet"]
 local UpdateCollectionEvent = events["UpdatePetCollection"]
 local StartPetBattleEvent = events["StartPetBattle"]
+local BattleUpdateEvent = events["BattleUpdate"]
 
 local cooldowns: {[Player]: number} = {}
 
@@ -159,7 +160,13 @@ end)
 -- Khiêu chiến Đấu trường Pet (StartPetBattle)
 StartPetBattleEvent.OnServerEvent:Connect(function(player: Player, bossId: string)
     if typeof(bossId) ~= "string" then return end
-    BattleService.StartBattle(player, bossId, PetService, NetworkEvents)
+    local success, message = BattleService.StartBattle(player, bossId, PetService, NetworkEvents)
+    if not success and BattleUpdateEvent then
+        BattleUpdateEvent:FireClient(player, {
+            state = "Rejected",
+            message = message or "Không thể bắt đầu trận đấu lúc này!",
+        })
+    end
 end)
 
 -- 6. Khởi động Vòng lặp dạo bộ tích lũy EXP
