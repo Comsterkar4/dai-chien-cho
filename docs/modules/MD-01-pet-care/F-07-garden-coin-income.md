@@ -21,7 +21,7 @@ Vào từ: SC-05 (Khu chuồng thú cưng 6 người chơi) và SC-01 (Giao di�
 - **R2** Luôn → tổng số Xu sinh ra mỗi chu kỳ bằng số lượng thú cưng có trạng thái Đang thả vườn nhân với mức sinh Xu của một thú cưng theo BR-15, áp dụng đồng nhất cho mọi độ hiếm (Common, Rare, Epic, Legendary, Mythic) và không giới hạn số dư Xu tích lũy.
 - **R3** Nếu không có thú cưng nào mang trạng thái Đang thả vườn trong khuôn viên vườn riêng → hệ thống không sinh Xu, không thực hiện giao dịch cộng Xu và giữ nguyên số dư Ví Xu.
 - **R4** Khi người chơi thay đổi trạng thái thả vườn của thú cưng giữa Đang thả vườn và Không thả vườn → chu kỳ sinh Xu kế tiếp tính theo số lượng thú cưng có trạng thái Đang thả vườn tại thời điểm kết thúc chu kỳ đó.
-  [CẦN RÕ: Thú cưng đang được trang bị đồng hành cùng người chơi theo BR-07 có đồng thời giữ trạng thái Đang thả vườn để sinh Xu không?; phương án: Không, chỉ thú cưng ở trong khuôn viên vườn riêng mới sinh Xu / Có, vẫn tính như đang thả vườn; khuyến nghị: Không, để tách biệt rõ nguồn Xu đi dạo ở F-06 với nguồn Xu thả vườn ở F-07]
+  Thú cưng đang được trang bị đồng hành cùng người chơi theo BR-07 không giữ trạng thái Đang thả vườn và không sinh Xu thả vườn; chỉ thú cưng đang ở trong khuôn viên vườn riêng mới sinh Xu.
 - **R5** Khi người chơi thoát phòng game hoặc mất kết nối khiến khu chuồng riêng được giải phóng theo BR-08 → hệ thống dừng bộ đếm chu kỳ sinh Xu của khu vườn đó và không cộng Xu cho chu kỳ chưa hoàn tất.
 - **R6** Nếu giao dịch cộng Xu vào Ví Xu thất bại do lỗi đồng bộ dữ liệu hoặc số Xu tính ra không phải số nguyên dương theo BR-13 → hệ thống không làm sai lệch số dư Ví Xu hiện có theo BR-11, giữ nguyên trạng thái thả vườn của thú cưng và hiện M1.
 
@@ -78,10 +78,16 @@ Vào từ: SC-05 (Khu chuồng thú cưng 6 người chơi) và SC-01 (Giao di�
 - Thì: số dư Ví Xu của Minh giữ nguyên 100 Xu và các thú cưng vẫn giữ trạng thái Đang thả vườn
 - Và: màn hình hiện "Không thể cập nhật Xu từ vườn thú cưng lúc này. Số dư của bạn vẫn được giữ nguyên."
 
+### F-07-AC7 · Thú cưng đang trang bị đồng hành không sinh Xu thả vườn
+- Phủ: R4, BR-07 · Kiểm: api
+- Cho: người chơi Minh đang ở trong phòng game với số dư Ví Xu là 100 Xu, có 2 thú cưng mang trạng thái Đang thả vườn trong khu chuồng riêng và 1 thú cưng Shiba đang được trang bị đồng hành theo BR-07
+- Khi: trôi qua đủ 1 chu kỳ 15 giây
+- Thì: hệ thống chỉ tính Xu cho 2 thú cưng ở trong khuôn viên vườn riêng và cộng 4 Xu vào Ví Xu của Minh nâng số dư lên 104 Xu
+- Và: thú cưng Shiba đang trang bị đồng hành không sinh thêm Xu thả vườn
+
 ## Ghi chú
 Cho dev: bộ đếm chu kỳ sinh Xu phải chạy ở phía server để tránh sai lệch đồng hồ client và đảm bảo tính nhất quán với giao dịch cộng Xu của Ví Xu (F-05).
 
 ### Giả định
-- Số liệu 2 Xu mỗi thú cưng mỗi 15 giây trong các quy tắc và tiêu chí nghiệm thu dùng theo khuyến nghị đang chờ chốt của BR-15.
 - Xu thả vườn chỉ sinh khi người chơi đang trực tuyến trong phòng game và đang sở hữu khu chuồng riêng; không tính tích lũy Xu ngoại tuyến.
 - Trong đợt này không áp dụng cơ chế chống treo máy (AFK), không giới hạn tốc độ nhận Xu và không áp dụng hệ số nhân Xu theo độ hiếm theo phạm vi tầm nhìn sản phẩm.
