@@ -57,13 +57,13 @@ function ToolbarViewController.Init(mainHud: ScreenGui, UIFramework: any, WebSty
     local gachaBtn = toolbar:WaitForChild("GachaBtn") :: GuiButton
     local battleBtn = toolbar:FindFirstChild("BattleBtn")
 
-    local card = mainHud:WaitForChild("PetCard")
-    local nameLabel = card:WaitForChild("PetName") :: TextLabel
-    local statsLabel = card:WaitForChild("StatsLabel") :: TextLabel
-    local expBg = card:WaitForChild("ExpBg")
-    local expFill = expBg:WaitForChild("ExpFill") :: Frame
-    local expText = expBg:WaitForChild("ExpText") :: TextLabel
-    local cardStroke = card:FindFirstChildOfClass("UIStroke")
+    local card = mainHud:FindFirstChild("PetCard")
+    local nameLabel = card and card:FindFirstChild("PetName") :: TextLabel?
+    local statsLabel = card and card:FindFirstChild("StatsLabel") :: TextLabel?
+    local expBg = card and card:FindFirstChild("ExpBg")
+    local expFill = expBg and expBg:FindFirstChild("ExpFill") :: Frame?
+    local expText = expBg and expBg:FindFirstChild("ExpText") :: TextLabel?
+    local cardStroke = card and card:FindFirstChildOfClass("UIStroke")
 
     -- Áp dụng CSS Web Style & Spring
     WebStyleEngine.StyleButton(feedBtn, "Gold", 16)
@@ -88,20 +88,31 @@ function ToolbarViewController.Init(mainHud: ScreenGui, UIFramework: any, WebSty
 
     -- Click Bật/Tắt Dây dắt chó
     local isLeashing = true
+    local leashLabel = leashBtn:FindFirstChild("ButtonLabel") :: TextLabel?
+    local leashIcon = leashBtn:FindFirstChild("ButtonIcon") :: TextLabel?
+
     leashBtn.MouseButton1Click:Connect(function()
         isLeashing = not isLeashing
         ToggleLeashEvent:FireServer()
         if isLeashing then
-            WebStyleEngine.StyleButton(leashBtn, "Cyan", 16)
+            WebStyleEngine.StyleButton(leashBtn, "Cyan", 18)
+            if leashLabel then leashLabel.Text = "DẮT CHÓ" end
+            if leashIcon then leashIcon.Text = "🦮" end
             ToolbarViewController.SpawnExpPopup(leashBtn, "🦮 BẬT DẮT")
         else
-            WebStyleEngine.StyleButton(leashBtn, "GlassHover", 16)
+            WebStyleEngine.StyleButton(leashBtn, "GlassHover", 18)
+            if leashLabel then leashLabel.Text = "THẢ DÂY" end
+            if leashIcon then leashIcon.Text = "🐾" end
             ToolbarViewController.SpawnExpPopup(leashBtn, "❌ THẢ DÂY")
         end
     end)
 
     -- Lắng nghe cập nhật Pet Data
     UpdateEvent.OnClientEvent:Connect(function(data)
+        if not card or not nameLabel or not statsLabel or not expText or not expFill then
+            return
+        end
+
         nameLabel.Text = (data.icon or "🐶") .. " " .. (data.name or "Shiba Inu")
         statsLabel.Text = string.format("Level %d  •  ⚔️ Power: %d", data.level, data.power)
         

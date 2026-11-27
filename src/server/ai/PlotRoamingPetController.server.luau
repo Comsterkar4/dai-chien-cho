@@ -54,9 +54,9 @@ local function startPetAI(pet, plot, plotId)
         local rx = math.random(minX * 10, maxX * 10) / 10
         local rz = math.random(minZ * 10, maxZ * 10) / 10
 
-        -- Tránh đâm vào nhà Doghouse ở góc sau
+        -- Tránh đâm vào nhà Doghouse ở giữa phía sau
         local houseX = plotCenterX + (-gateX * 17)
-        local houseZ = plotCenterZ - 9
+        local houseZ = plotCenterZ
         if math.abs(rx - houseX) < 7 and math.abs(rz - houseZ) < 7 then
             rx = plotCenterX + (gateX * 5)
             rz = plotCenterZ

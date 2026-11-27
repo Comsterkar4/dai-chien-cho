@@ -52,4 +52,10 @@ if ArenaViewController then
     ArenaViewController.Init(mainHud, UIFramework, WebStyleEngine)
 end
 
+-- E. Màn hình Chào Mừng / Thương Hiệu Game (hud/SplashViewController)
+local SplashViewController = getViewController("hud", "SplashViewController")
+if SplashViewController then
+    SplashViewController.Init(mainHud, UIFramework, WebStyleEngine)
+end
+
 print("✨ [MainHUD] Toàn bộ hệ thống giao diện đã được khởi tạo thành công theo cấu trúc module riêng biệt!")

@@ -1,16 +1,17 @@
 --!strict
--- ArenaViewController.luau: Quản lý giao diện Đấu Trường Solo Pet (ArenaModal, Boss Selection & HP Clash)
+-- ArenaViewController.luau: Quản lý giao diện Đấu Trường Solo Pet (ArenaModal, Boss Selection & Real-time Combat Results)
 local TweenService = game:GetService("TweenService")
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local ProximityPromptService = game:GetService("ProximityPromptService")
+local Debris = game:GetService("Debris")
 
 local ArenaViewController = {}
 
 -- Danh sách 3 Boss thử thách trong Đấu Trường
 local BOSS_LIST = {
-    { id = "corgi_boss", name = "Corgi Tốc Độ", icon = "🦊", level = 3, power = 25, hp = 100, rewardExp = 50, rewardGold = 100, color = Color3.fromRGB(245, 158, 11) },
-    { id = "husky_boss", name = "Husky Băng Giá", icon = "🐺", level = 8, power = 65, hp = 250, rewardExp = 150, rewardGold = 300, color = Color3.fromRGB(6, 182, 212) },
-    { id = "tibetan_boss", name = "Ngao Tây Tạng Vương", icon = "🦁", level = 15, power = 150, hp = 600, rewardExp = 500, rewardGold = 1000, color = Color3.fromRGB(239, 68, 68) }
+    { id = "corgi_boss", name = "Corgi Tốc Độ", icon = "🦊", level = 3, power = 18, hp = 120, rewardExp = 60, rewardGold = 100, color = Color3.fromRGB(245, 158, 11) },
+    { id = "husky_boss", name = "Husky Băng Giá", icon = "🐺", level = 8, power = 45, hp = 280, rewardExp = 180, rewardGold = 300, color = Color3.fromRGB(6, 182, 212) },
+    { id = "tibetan_boss", name = "Ngao Tây Tạng Vương", icon = "🦁", level = 15, power = 110, hp = 650, rewardExp = 550, rewardGold = 1000, color = Color3.fromRGB(239, 68, 68) }
 }
 
 -- Khởi tạo hoặc tìm ArenaModal
@@ -83,6 +84,150 @@ local function getOrCreateArenaModal(mainHud: ScreenGui, WebStyleEngine: any): F
     return modal
 end
 
+-- Tạo Popup kết quả trận đấu (Victory / Defeat Popup)
+local function showBattleResult(mainHud: ScreenGui, result: {isVictory: boolean, bossName: string, rewardExp: number?, rewardGold: number?}, UIFramework: any, WebStyleEngine: any)
+    local existing = mainHud:FindFirstChild("BattleResultModal")
+    if existing then existing:Destroy() end
+
+    local modal = Instance.new("Frame")
+    modal.Name = "BattleResultModal"
+    modal.Size = UDim2.new(0, 420, 0, 260)
+    modal.Position = UDim2.new(0.5, 0, 0.5, 0)
+    modal.AnchorPoint = Vector2.new(0.5, 0.5)
+    modal.ZIndex = 50
+    modal.Parent = mainHud
+
+    local isVic = result.isVictory
+    local bColor = isVic and Color3.fromRGB(255, 215, 0) or Color3.fromRGB(239, 68, 68)
+
+    WebStyleEngine.ApplyGlassmorphism(modal, {
+        BorderRadius = 24,
+        BackgroundColor = Color3.fromRGB(20, 18, 30),
+        Transparency = 0.05,
+        BorderColor = bColor,
+        BorderTransparency = 0.2,
+        BorderWidth = 2.5
+    })
+
+    local title = Instance.new("TextLabel")
+    title.Size = UDim2.new(1, 0, 0, 45)
+    title.Position = UDim2.new(0, 0, 0, 20)
+    title.BackgroundTransparency = 1
+    title.Text = isVic and "🏆 CHIẾN THẮNG VANG DỘI! 🏆" or "💔 THẤT BẠI TIẾC NUỐI! 💔"
+    title.TextColor3 = isVic and Color3.fromRGB(255, 220, 60) or Color3.fromRGB(255, 90, 90)
+    title.Font = Enum.Font.FredokaOne
+    title.TextSize = 22
+    title.ZIndex = 51
+    title.Parent = modal
+
+    local desc = Instance.new("TextLabel")
+    desc.Size = UDim2.new(1, -40, 0, 80)
+    desc.Position = UDim2.new(0, 20, 0, 75)
+    desc.BackgroundTransparency = 1
+    if isVic then
+        if result.rewardGold and result.rewardGold > 0 then
+            desc.Text = string.format("Hạ gục thành công %s!\n\n✨ Nhận: +%d EXP  •  💰 +%d Vàng", result.bossName, result.rewardExp or 0, result.rewardGold)
+        else
+            desc.Text = string.format("Hạ gục thành công %s!\n\n✨ Nhận: +%d EXP", result.bossName, result.rewardExp or 0)
+        end
+    else
+        desc.Text = string.format("Thú cưng đã bị %s áp đảo!\nHãy cho cún ăn để nâng cấp và phục thù nhé!\n\n✨ Nhận an ủi: +%d EXP", result.bossName, result.rewardExp or 15)
+    end
+    desc.TextColor3 = Color3.fromRGB(230, 225, 240)
+    desc.Font = Enum.Font.GothamMedium
+    desc.TextSize = 14
+    desc.ZIndex = 51
+    desc.Parent = modal
+
+    local okBtn = Instance.new("TextButton")
+    okBtn.Size = UDim2.new(0, 160, 0, 44)
+    okBtn.Position = UDim2.new(0.5, -80, 1, -64)
+    okBtn.Text = "XÁC NHẬN"
+    okBtn.TextColor3 = Color3.fromRGB(255, 255, 255)
+    okBtn.Font = Enum.Font.FredokaOne
+    okBtn.TextSize = 14
+    okBtn.ZIndex = 51
+    okBtn.Parent = modal
+
+    WebStyleEngine.StyleButton(okBtn, isVic and "Gold" or "Danger", 14)
+    UIFramework.ApplySpringButton(okBtn, {HoverScale = 1.08, ClickScale = 0.90, Speed = 30, Damping = 0.65})
+
+    okBtn.MouseButton1Click:Connect(function()
+        UIFramework.SpringCloseModal(modal)
+        task.wait(0.5)
+        modal:Destroy()
+    end)
+
+    UIFramework.SpringOpenModal(modal)
+end
+
+-- Hiển thị thông báo từ chối khiêu chiến (tách biệt với kết quả thua trận)
+local function showBattleRejection(mainHud: ScreenGui, message: string, UIFramework: any, WebStyleEngine: any)
+    local existing = mainHud:FindFirstChild("BattleRejectionModal")
+    if existing then existing:Destroy() end
+
+    local modal = Instance.new("Frame")
+    modal.Name = "BattleRejectionModal"
+    modal.Size = UDim2.new(0, 400, 0, 220)
+    modal.Position = UDim2.new(0.5, 0, 0.5, 0)
+    modal.AnchorPoint = Vector2.new(0.5, 0.5)
+    modal.ZIndex = 50
+    modal.Parent = mainHud
+
+    WebStyleEngine.ApplyGlassmorphism(modal, {
+        BorderRadius = 24,
+        BackgroundColor = Color3.fromRGB(20, 18, 30),
+        Transparency = 0.05,
+        BorderColor = Color3.fromRGB(245, 158, 11),
+        BorderTransparency = 0.2,
+        BorderWidth = 2.5
+    })
+
+    local title = Instance.new("TextLabel")
+    title.Size = UDim2.new(1, 0, 0, 42)
+    title.Position = UDim2.new(0, 0, 0, 18)
+    title.BackgroundTransparency = 1
+    title.Text = "⚠️ KHÔNG THỂ KHIÊU CHIẾN"
+    title.TextColor3 = Color3.fromRGB(245, 158, 11)
+    title.Font = Enum.Font.FredokaOne
+    title.TextSize = 20
+    title.ZIndex = 51
+    title.Parent = modal
+
+    local desc = Instance.new("TextLabel")
+    desc.Size = UDim2.new(1, -40, 0, 70)
+    desc.Position = UDim2.new(0, 20, 0, 68)
+    desc.BackgroundTransparency = 1
+    desc.Text = message
+    desc.TextWrapped = true
+    desc.TextColor3 = Color3.fromRGB(230, 225, 240)
+    desc.Font = Enum.Font.GothamMedium
+    desc.TextSize = 14
+    desc.ZIndex = 51
+    desc.Parent = modal
+
+    local okBtn = Instance.new("TextButton")
+    okBtn.Size = UDim2.new(0, 140, 0, 40)
+    okBtn.Position = UDim2.new(0.5, -70, 1, -58)
+    okBtn.Text = "ĐÓNG"
+    okBtn.TextColor3 = Color3.fromRGB(255, 255, 255)
+    okBtn.Font = Enum.Font.FredokaOne
+    okBtn.TextSize = 14
+    okBtn.ZIndex = 51
+    okBtn.Parent = modal
+
+    WebStyleEngine.StyleButton(okBtn, "Gold", 14)
+    UIFramework.ApplySpringButton(okBtn, {HoverScale = 1.08, ClickScale = 0.90, Speed = 30, Damping = 0.65})
+
+    okBtn.MouseButton1Click:Connect(function()
+        UIFramework.SpringCloseModal(modal)
+        task.wait(0.5)
+        modal:Destroy()
+    end)
+
+    UIFramework.SpringOpenModal(modal)
+end
+
 function ArenaViewController.Init(mainHud: ScreenGui, UIFramework: any, WebStyleEngine: any)
     local toolbar = mainHud:WaitForChild("RightToolbar")
     local battleBtn = toolbar:FindFirstChild("BattleBtn")
@@ -92,6 +237,12 @@ function ArenaViewController.Init(mainHud: ScreenGui, UIFramework: any, WebStyle
     local bossList = arenaModal:WaitForChild("BossList") :: ScrollingFrame
 
     UIFramework.ApplySpringButton(closeBtn, {HoverScale = 1.15, ClickScale = 0.85, Speed = 32, Damping = 0.60})
+
+    -- Lấy RemoteEvents
+    local Events = ReplicatedStorage:WaitForChild("Events")
+    local StartPetBattleEvent = Events:WaitForChild("StartPetBattle")
+    local BattleUpdateEvent = Events:WaitForChild("BattleUpdate")
+    local BattleFinishEvent = Events:WaitForChild("BattleFinish")
 
     -- Render 3 thẻ Boss thử thách
     for idx, boss in ipairs(BOSS_LIST) do
@@ -157,16 +308,29 @@ function ArenaViewController.Init(mainHud: ScreenGui, UIFramework: any, WebStyle
         WebStyleEngine.StyleButton(fightBtn, "Danger", 12)
         UIFramework.ApplySpringButton(fightBtn, {HoverScale = 1.08, ClickScale = 0.90, Speed = 30, Damping = 0.65})
 
+        -- Click Khiêu chiến: Đóng Modal và gửi lệnh lên Server bắt đầu trận chiến 3D
         fightBtn.MouseButton1Click:Connect(function()
-            fightBtn.Text = "ĐANG ĐẤU..."
-            task.wait(1.2)
-            fightBtn.Text = "CHIẾN THẮNG! 🏆"
-            fightBtn.BackgroundColor3 = Color3.fromRGB(46, 204, 113)
-            task.wait(1.5)
-            fightBtn.Text = "KHIÊU CHIẾN"
-            fightBtn.BackgroundColor3 = Color3.fromRGB(239, 68, 68)
+            StartPetBattleEvent:FireServer(boss.id)
+            UIFramework.SpringCloseModal(arenaModal)
         end)
     end
+
+    -- Lắng nghe cập nhật / từ chối khiêu chiến
+    BattleUpdateEvent.OnClientEvent:Connect(function(payload)
+        if type(payload) == "table" and payload.state == "Rejected" then
+            showBattleRejection(
+                mainHud,
+                tostring(payload.message or "Không thể bắt đầu trận đấu lúc này!"),
+                UIFramework,
+                WebStyleEngine
+            )
+        end
+    end)
+
+    -- Lắng nghe kết thúc trận đấu
+    BattleFinishEvent.OnClientEvent:Connect(function(result)
+        showBattleResult(mainHud, result, UIFramework, WebStyleEngine)
+    end)
 
     -- Toggle mở/đóng Đấu Trường
     local function toggleArena()
