@@ -4,6 +4,13 @@ local TweenService = game:GetService("TweenService")
 local RunService = game:GetService("RunService")
 
 local Spring = require(script.Parent:WaitForChild("Spring"))
+local SoundManager: any = nil
+if RunService:IsClient() then
+    local smModule = script.Parent:FindFirstChild("SoundManager")
+    if smModule and smModule:IsA("ModuleScript") then
+        SoundManager = require(smModule)
+    end
+end
 
 local UIFramework = {}
 
@@ -70,6 +77,9 @@ function UIFramework.ApplySpringButton(btn: GuiButton, options: {[string]: any}?
         if not isPressed then
             spring:SetTarget(hoverScale)
             wakeUp()
+            if SoundManager and not options.Silent then
+                SoundManager.PlaySFX("ButtonHover", 0.04)
+            end
         end
     end)
 
@@ -84,6 +94,9 @@ function UIFramework.ApplySpringButton(btn: GuiButton, options: {[string]: any}?
         isPressed = true
         spring:SetTarget(clickScale)
         wakeUp()
+        if SoundManager and not options.Silent then
+            SoundManager.PlaySFX("ButtonClick", 0.04)
+        end
     end)
 
     btn.MouseButton1Up:Connect(function()
@@ -114,6 +127,9 @@ function UIFramework.SpringOpenModal(modalFrame: GuiObject)
 
     modalFrame.Visible = true
     uiScale.Scale = 0.7
+    if SoundManager then
+        SoundManager.PlaySFX("ModalOpen")
+    end
     local spring = Spring.new(0.7, 24, 0.68)
     spring:SetTarget(1.0)
 
@@ -141,6 +157,9 @@ function UIFramework.SpringCloseModal(modalFrame: GuiObject, callback: (() -> ()
     end
 
     local uiScale = getOrCreateUIScale(modalFrame)
+    if SoundManager then
+        SoundManager.PlaySFX("ModalClose")
+    end
     local tween = TweenService:Create(uiScale, TweenInfo.new(0.18, Enum.EasingStyle.Back, Enum.EasingDirection.In), {
         Scale = 0.5
     })

@@ -18,6 +18,7 @@ WebStyleEngine.Palettes = {
     Cyan = { Start = Color3.fromRGB(6, 182, 212), End = Color3.fromRGB(14, 165, 233) },     -- Cyan -> Sky
     Purple = { Start = Color3.fromRGB(168, 85, 247), End = Color3.fromRGB(192, 132, 252) }, -- Purple -> Lavender
     Pink = { Start = Color3.fromRGB(236, 72, 153), End = Color3.fromRGB(244, 114, 182) },   -- Pink -> Rose
+    Muted = { Start = Color3.fromRGB(71, 85, 105), End = Color3.fromRGB(51, 65, 85) },      -- Slate -> Dark Slate
 }
 
 -- 1. CSS Box Shadow (Tạo bóng đổ mềm mại, có chiều sâu 3D như CSS box-shadow)
@@ -107,7 +108,8 @@ end
 -- 4. CSS Button Theming (Style nút bấm rực rỡ với Gradient, Bo góc, Viền kim loại & Bóng đổ)
 function WebStyleEngine.StyleButton(btn: GuiButton, themeName: string, borderRadius: number?)
     borderRadius = borderRadius or 14
-    local theme = WebStyleEngine.Palettes[themeName] or WebStyleEngine.Palettes.Primary
+    local rawTheme = WebStyleEngine.Palettes[themeName]
+    local theme = (type(rawTheme) == "table" and rawTheme.Start and rawTheme.End) and rawTheme or WebStyleEngine.Palettes.Primary
 
     btn.AutoButtonColor = false
     btn.BorderSizePixel = 0

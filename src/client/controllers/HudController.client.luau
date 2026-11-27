@@ -10,6 +10,11 @@ local FrameworkFolder = Modules:FindFirstChild("Framework") or Modules
 
 local UIFramework = require(FrameworkFolder:WaitForChild("UIFramework"))
 local WebStyleEngine = require(FrameworkFolder:WaitForChild("WebStyleEngine"))
+local SoundManagerModule = FrameworkFolder:FindFirstChild("SoundManager")
+if SoundManagerModule and SoundManagerModule:IsA("ModuleScript") then
+    local SoundManager = require(SoundManagerModule)
+    SoundManager.Init()
+end
 
 -- 2. Hàm hỗ trợ tìm nạp ModuleViewController (linh hoạt dù nằm trong script hay trong MainHUD)
 local function getViewController(folderName: string, moduleName: string)
@@ -44,6 +49,12 @@ end
 local GachaViewController = getViewController("gacha", "GachaViewController")
 if GachaViewController then
     GachaViewController.Init(mainHud, UIFramework, WebStyleEngine)
+end
+
+-- C2. Sổ Sưu Tập 305 Loài Chó (gacha/CollectionViewController)
+local CollectionViewController = getViewController("gacha", "CollectionViewController")
+if CollectionViewController then
+    CollectionViewController.Init(mainHud, UIFramework, WebStyleEngine)
 end
 
 -- D. Cửa sổ Đấu Trường Solo Pet (arena/)

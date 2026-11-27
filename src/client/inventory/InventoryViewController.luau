@@ -9,6 +9,12 @@ local InventoryViewController = {}
 local Events = ReplicatedStorage:WaitForChild("Events")
 local UseItemEvent = Events:WaitForChild("UseItem")
 local InvUpdateEvent = Events:WaitForChild("UpdateInventory")
+local UpdatePetDataEvent = Events:WaitForChild("UpdatePetData")
+
+local Modules = ReplicatedStorage:WaitForChild("Modules")
+local FrameworkFolder = Modules:FindFirstChild("Framework") or Modules
+local SoundManagerModule = FrameworkFolder:FindFirstChild("SoundManager")
+local SoundManager: any = SoundManagerModule and require(SoundManagerModule) or nil
 
 local function spawnExpPopup(btn: GuiButton, text: string?)
     local popup = Instance.new("TextLabel")
@@ -83,8 +89,12 @@ function InventoryViewController.Init(mainHud: ScreenGui, UIFramework: any, WebS
         UIFramework.SpringCloseModal(invModal)
     end)
 
+    local equippedGearId: string? = nil
+    local lastInventory: {any}? = nil
+
     -- Cập nhật danh sách vật phẩm kính mờ (Glass Cards)
-    InvUpdateEvent.OnClientEvent:Connect(function(inventory)
+    local function renderInventory(inventory: {any})
+        lastInventory = inventory
         for _, child in ipairs(itemList:GetChildren()) do
             if child:IsA("Frame") then child:Destroy() end
         end
@@ -95,13 +105,16 @@ function InventoryViewController.Init(mainHud: ScreenGui, UIFramework: any, WebS
             slot.Size = UDim2.new(1, -10, 0, 68)
             slot.Parent = itemList
 
+            local isGear = it.kind == "gear"
+            local isEquippedGear = isGear and (equippedGearId == it.id)
+
             WebStyleEngine.ApplyGlassmorphism(slot, {
                 BorderRadius = 14,
-                BackgroundColor = Color3.fromRGB(26, 30, 44),
+                BackgroundColor = isEquippedGear and Color3.fromRGB(24, 52, 48) or Color3.fromRGB(26, 30, 44),
                 Transparency = 0.35,
-                BorderColor = Color3.fromRGB(255, 255, 255),
-                BorderTransparency = 0.85,
-                BorderWidth = 1
+                BorderColor = isEquippedGear and Color3.fromRGB(52, 211, 153) or Color3.fromRGB(255, 255, 255),
+                BorderTransparency = isEquippedGear and 0.25 or 0.85,
+                BorderWidth = isEquippedGear and 2 or 1
             })
 
             local icon = Instance.new("TextLabel")
@@ -138,25 +151,62 @@ function InventoryViewController.Init(mainHud: ScreenGui, UIFramework: any, WebS
             desc.TextXAlignment = Enum.TextXAlignment.Left
             desc.Parent = slot
 
+            local isTicket = it.kind == "ticket"
             local useBtn = Instance.new("TextButton")
             useBtn.Size = UDim2.new(0, 90, 0, 40)
             useBtn.Position = UDim2.new(1, -100, 0.5, -20)
-            useBtn.Text = it.count > 0 and "CHO ĂN" or "HẾT"
+            if isGear then
+                useBtn.Text = it.count > 0 and (isEquippedGear and "ĐANG ĐEO" or "TRANG BỊ") or "CHƯA CÓ"
+            elseif isTicket then
+                useBtn.Text = it.count > 0 and "DÙNG GACHA" or "HẾT"
+            else
+                useBtn.Text = it.count > 0 and "CHO ĂN" or "HẾT"
+            end
             useBtn.TextColor3 = Color3.fromRGB(255, 255, 255)
             useBtn.Font = Enum.Font.FredokaOne
-            useBtn.TextSize = 13
+            useBtn.TextSize = (isTicket or isGear) and 11 or 13
             useBtn.Parent = slot
 
-            if it.count > 0 then
-                WebStyleEngine.StyleButton(useBtn, "Gold", 10)
+            if it.count > 0 and isGear then
+                WebStyleEngine.StyleButton(useBtn, isEquippedGear and "Success" or "Cyan", 10)
                 UIFramework.ApplySpringButton(useBtn, {HoverScale = 1.08, ClickScale = 0.90, Speed = 30, Damping = 0.65})
                 useBtn.MouseButton1Click:Connect(function()
                     UseItemEvent:FireServer(it.id)
+                end)
+            elseif it.count > 0 and not isTicket then
+                WebStyleEngine.StyleButton(useBtn, "Gold", 10)
+                UIFramework.ApplySpringButton(useBtn, {HoverScale = 1.08, ClickScale = 0.90, Speed = 30, Damping = 0.65})
+                local isUsing = false
+                useBtn.MouseButton1Click:Connect(function()
+                    if isUsing then
+                        return
+                    end
+                    isUsing = true
+                    UseItemEvent:FireServer(it.id)
+                    if SoundManager then
+                        SoundManager.PlaySFX("FeedEat", 0.08)
+                    end
                     spawnExpPopup(useBtn, "+" .. it.exp .. " EXP ✨")
+                    task.delay(0.3, function()
+                        isUsing = false
+                    end)
                 end)
             else
-                WebStyleEngine.StyleButton(useBtn, "GlassHover", 10)
+                WebStyleEngine.StyleButton(useBtn, isTicket and it.count > 0 and "Purple" or "Muted", 10)
+                useBtn.Active = false
                 useBtn.AutoButtonColor = false
+            end
+        end
+    end
+
+    InvUpdateEvent.OnClientEvent:Connect(renderInventory)
+    UpdatePetDataEvent.OnClientEvent:Connect(function(data)
+        if type(data) ~= "table" then return end
+        local newGear = (type(data.equippedGearId) == "string") and data.equippedGearId or nil
+        if newGear ~= equippedGearId then
+            equippedGearId = newGear
+            if lastInventory then
+                renderInventory(lastInventory)
             end
         end
     end)
