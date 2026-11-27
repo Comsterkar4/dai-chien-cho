@@ -18,6 +18,8 @@ local InventoryService = require(ServicesFolder:WaitForChild("InventoryService")
 local GachaService = require(ServicesFolder:WaitForChild("GachaService"))
 local PetService = require(ServicesFolder:WaitForChild("PetService"))
 local BattleService = require(ServicesFolder:WaitForChild("BattleService"))
+local CoinService = require(ServicesFolder:WaitForChild("CoinService"))
+local PlayerDataStoreService = require(ServicesFolder:WaitForChild("PlayerDataStoreService"))
 
 -- 3. Khởi tạo mạng RemoteEvents
 local events = NetworkEvents.Init()
@@ -30,17 +32,47 @@ local RollGachaEvent = events["RollGacha"]
 local GachaResultEvent = events["GachaResult"]
 local EquipPetEvent = events["EquipPet"]
 local UpdateCollectionEvent = events["UpdatePetCollection"]
+local UpdateCoinsEvent = events["UpdateCoins"]
 local StartPetBattleEvent = events["StartPetBattle"]
 local BattleUpdateEvent = events["BattleUpdate"]
+local PartyActionEvent = events["PartyAction"]
+
+local GACHA_COST_SINGLE = 100
+local GACHA_COST_FIVE = 450
 
 local cooldowns: {[Player]: number} = {}
+local gachaCooldowns: {[Player]: number} = {}
+
+local function buildSavePayload(player: Player)
+    local pData = PetService.GetPlayerData(player)
+    if not pData then
+        return nil
+    end
+    return {
+        currentPetId = pData.currentPetId,
+        equippedPets = pData.equippedPets,
+        equippedGearId = pData.equippedGearId,
+        gearPowerBonus = pData.gearPowerBonus,
+        playerLevel = pData.playerLevel,
+        playerExp = pData.playerExp,
+        level = pData.level,
+        exp = pData.exp,
+        power = pData.power,
+        coins = CoinService.GetCoins(player),
+        isLeashed = pData.isLeashed,
+        collection = GachaService.GetCollection(player),
+        inventory = InventoryService.ExportCounts(player),
+    }
+end
 
 -- 4. Xử lý Vòng đời Người chơi (Player Lifecycle)
 local function onPlayerAdded(player: Player)
+    local saved = PlayerDataStoreService.Load(player)
     local assignedPlot = PlotService.AssignPlot(player)
-    local pData = PetService.InitPlayerData(player, assignedPlot)
-    local inventory = InventoryService.InitPlayer(player)
-    local collection = GachaService.InitPlayer(player)
+    local pData = PetService.InitPlayerData(player, assignedPlot, saved)
+    local inventory = InventoryService.InitPlayer(player, saved and saved.inventory or nil)
+    local collection = GachaService.InitPlayer(player, saved and saved.collection or nil)
+    local coins = CoinService.InitPlayer(player, saved and saved.coins or nil)
 
     player.CharacterAdded:Connect(function(char)
         task.wait(0.5)
@@ -56,16 +88,8 @@ local function onPlayerAdded(player: Player)
             end
         end
 
-        -- Hủy model cũ nếu có và sinh thú cưng mới đi theo chủ
-        if pData.model then
-            pData.model:Destroy()
-        end
-        local pet = PetService.SpawnPlayerPet(player, pData.currentPetId)
-        pData.model = pet
-        if pet then
-            PetService.UpdatePetTag(pet, pData)
-        end
-        PetService.SetPetLeash(player, pData.isLeashed)
+        -- Hủy model cũ và sinh toàn bộ đội hình thú cưng (tối đa 3 con) đi theo chủ
+        PetService.SpawnEquippedPets(player)
 
         -- Gửi dữ liệu khởi tạo về Client
         local payload = PetService.GetPetPayload(player)
@@ -74,6 +98,9 @@ local function onPlayerAdded(player: Player)
         end
         InvUpdateEvent:FireClient(player, inventory)
         UpdateCollectionEvent:FireClient(player, collection)
+        if UpdateCoinsEvent then
+            UpdateCoinsEvent:FireClient(player, { coins = CoinService.GetCoins(player) })
+        end
     end)
 end
 
@@ -83,11 +110,17 @@ for _, p in ipairs(Players:GetPlayers()) do
 end
 
 Players.PlayerRemoving:Connect(function(player: Player)
+    local payload = buildSavePayload(player)
+    if payload then
+        PlayerDataStoreService.Save(player, payload)
+    end
     PlotService.ReleasePlot(player)
     PetService.CleanPlayer(player)
     InventoryService.RemovePlayer(player)
     GachaService.RemovePlayer(player)
+    CoinService.RemovePlayer(player)
     cooldowns[player] = nil
+    gachaCooldowns[player] = nil
 end)
 
 -- 5. Lắng nghe các Sự kiện Người chơi (Remote Event Handlers)
@@ -95,7 +128,7 @@ end)
 -- Cho ăn nhanh (FeedPet)
 FeedEvent.OnServerEvent:Connect(function(player: Player)
     local now = os.clock()
-    if cooldowns[player] and (now - cooldowns[player]) < 0.3 then return end
+    if cooldowns[player] and (now - cooldowns[player]) < 0.5 then return end
     cooldowns[player] = now
 
     local pData = PetService.GetPlayerData(player)
@@ -112,11 +145,25 @@ FeedEvent.OnServerEvent:Connect(function(player: Player)
     end
 end)
 
--- Sử dụng vật phẩm từ Túi Đồ (UseItem)
+-- Sử dụng vật phẩm hoặc Đeo/Tháo Trang Bị từ Túi Đồ (UseItem)
 UseItemEvent.OnServerEvent:Connect(function(player: Player, itemId: string)
+    if typeof(itemId) ~= "string" then return end
     local pData = PetService.GetPlayerData(player)
-    if not pData or not pData.model then return end
+    if not pData then return end
 
+    local itemDef = InventoryService.GetItem(player, itemId)
+    if itemDef and itemDef.kind == "gear" and itemDef.count > 0 then
+        local ok = PetService.EquipGear(player, itemId, itemDef.powerBonus or 0)
+        if ok then
+            local payload = PetService.GetPetPayload(player)
+            if payload then
+                UpdateEvent:FireClient(player, payload)
+            end
+        end
+        return
+    end
+
+    if not pData.model then return end
     local success, expGained, updatedInv = InventoryService.UseItem(player, itemId)
     if success then
         PetService.AddExp(player, expGained)
@@ -138,9 +185,49 @@ ToggleLeashEvent.OnServerEvent:Connect(function(player: Player)
     PetService.SetPetLeash(player, pData.isLeashed)
 end)
 
--- Quay Gacha Linh thú (RollGacha)
+-- Quay Gacha Linh thú (RollGacha — tốn 100 Xu x1 / 450 Xu x5)
 RollGachaEvent.OnServerEvent:Connect(function(player: Player, rollCount: number)
-    local results, collection = GachaService.Roll(player, rollCount)
+    local now = os.clock()
+    if gachaCooldowns[player] and (now - gachaCooldowns[player]) < 0.5 then return end
+    gachaCooldowns[player] = now
+
+    local normalizedCount = (rollCount == 5) and 5 or 1
+    local cost = (normalizedCount == 5) and GACHA_COST_FIVE or GACHA_COST_SINGLE
+
+    -- Ưu tiên dùng 1 Vé Quay Gacha miễn phí nếu quay x1
+    local usedTicket = false
+    if normalizedCount == 1 then
+        local consumed, updatedInv = InventoryService.ConsumeItem(player, "gacha_ticket", 1)
+        if consumed then
+            usedTicket = true
+            InvUpdateEvent:FireClient(player, updatedInv)
+        end
+    end
+
+    if not usedTicket then
+        local spent, remainingCoins = CoinService.SpendCoins(player, cost)
+        if not spent then
+            GachaResultEvent:FireClient(player, {
+                error = true,
+                message = string.format(
+                    "Không đủ Xu! Cần %d Xu (hiện có %d Xu). Hãy vào Ải đánh quái để kiếm thêm Xu!",
+                    cost,
+                    remainingCoins
+                ),
+            })
+            return
+        end
+
+        if UpdateCoinsEvent then
+            UpdateCoinsEvent:FireClient(player, {
+                coins = remainingCoins,
+                delta = -cost,
+                reason = "Gacha",
+            })
+        end
+    end
+
+    local results, collection = GachaService.Roll(player, normalizedCount)
     GachaResultEvent:FireClient(player, results)
     UpdateCollectionEvent:FireClient(player, collection)
 end)
@@ -157,10 +244,10 @@ EquipPetEvent.OnServerEvent:Connect(function(player: Player, petId: string)
     end
 end)
 
--- Khiêu chiến Đấu trường Pet (StartPetBattle)
+-- Khiêu chiến Ải Đấu trường Pet (mở Tổ Đội Co-op tối đa 3 người)
 StartPetBattleEvent.OnServerEvent:Connect(function(player: Player, bossId: string)
     if typeof(bossId) ~= "string" then return end
-    local success, message = BattleService.StartBattle(player, bossId, PetService, NetworkEvents)
+    local success, message = BattleService.StartBattle(player, bossId, PetService, NetworkEvents, CoinService, InventoryService)
     if not success and BattleUpdateEvent then
         BattleUpdateEvent:FireClient(player, {
             state = "Rejected",
@@ -169,9 +256,24 @@ StartPetBattleEvent.OnServerEvent:Connect(function(player: Player, bossId: strin
     end
 end)
 
--- 6. Khởi động Vòng lặp dạo bộ tích lũy EXP
+-- Thao tác Tổ Đội Co-op (join / start_now / cancel)
+if PartyActionEvent then
+    PartyActionEvent.OnServerEvent:Connect(function(player: Player, action: string)
+        if typeof(action) ~= "string" then return end
+        local ok, msg = BattleService.HandlePartyAction(player, action)
+        if not ok and BattleUpdateEvent then
+            BattleUpdateEvent:FireClient(player, {
+                state = "Rejected",
+                message = msg or "Không thể thực hiện thao tác tổ đội!",
+            })
+        end
+    end)
+end
+
+-- 6. Khởi động Vòng lặp dạo bộ tích lũy EXP & Tự động lưu DataStore
 PetService.StartWalkingLoop(function(player: Player, payload: any)
     if payload then
         UpdateEvent:FireClient(player, payload)
     end
 end)
+PlayerDataStoreService.StartAutoSaveLoop(buildSavePayload)

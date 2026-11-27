@@ -23,6 +23,13 @@ local RollGachaEvent = Events:WaitForChild("RollGacha")
 local GachaResultEvent = Events:WaitForChild("GachaResult")
 local EquipPetEvent = Events:WaitForChild("EquipPet")
 
+local Modules = ReplicatedStorage:WaitForChild("Modules")
+local ConfigFolder = Modules:FindFirstChild("Config") or Modules
+local PetConfig = require(ConfigFolder:WaitForChild("PetConfig"))
+local FrameworkFolder = Modules:FindFirstChild("Framework") or Modules
+local SoundManagerModule = FrameworkFolder:FindFirstChild("SoundManager")
+local SoundManager: any = SoundManagerModule and require(SoundManagerModule) or nil
+
 --==================================================
 -- STATE
 --==================================================
@@ -312,6 +319,9 @@ local function playEggShakeAnimation(
 
         activeEggTween = tween
         tween:Play()
+        if SoundManager and (i % 3 == 1) then
+            SoundManager.PlaySFX("EggShake", 0.08)
+        end
         task.wait(0.055)
     end
 
@@ -545,6 +555,177 @@ function GachaViewController.Init(
     addStroke(eggGraphic, Theme.Pink, 2, 0.45)
 
     --==================================================
+    -- HOURLY 30-PET BANNER & COUNTDOWN
+    --==================================================
+
+    local existingHourlyBtn = gachaModal:FindFirstChild("HourlyPoolBtn")
+    if existingHourlyBtn then existingHourlyBtn:Destroy() end
+    local existingHourlyPopup = mainHud:FindFirstChild("HourlyPoolPopup")
+    if existingHourlyPopup then existingHourlyPopup:Destroy() end
+
+    local hourlyBtn = Instance.new("TextButton")
+    hourlyBtn.Name = "HourlyPoolBtn"
+    hourlyBtn.Size = UDim2.new(0, 215, 0, 32)
+    hourlyBtn.Position = UDim2.new(0, 18, 0, 14)
+    hourlyBtn.Text = "⏰ 30 Cún Giờ Này (60:00)"
+    hourlyBtn.TextSize = 12
+    hourlyBtn.ZIndex = 12
+    hourlyBtn.Parent = gachaModal
+    styleCuteButton(hourlyBtn, Theme.Purple, Theme.PurpleDark, Color3.fromRGB(220, 200, 255))
+
+    local hourlyPopup = Instance.new("Frame")
+    hourlyPopup.Name = "HourlyPoolPopup"
+    hourlyPopup.Size = UDim2.new(0, 560, 0, 420)
+    hourlyPopup.Position = UDim2.new(0.5, 0, 0.5, 0)
+    hourlyPopup.AnchorPoint = Vector2.new(0.5, 0.5)
+    hourlyPopup.Visible = false
+    hourlyPopup.ZIndex = 45
+    hourlyPopup.Parent = mainHud
+    styleModal(hourlyPopup)
+
+    local hourlyTitle = Instance.new("TextLabel")
+    hourlyTitle.Size = UDim2.new(1, -60, 0, 34)
+    hourlyTitle.Position = UDim2.new(0, 18, 0, 12)
+    hourlyTitle.BackgroundTransparency = 1
+    hourlyTitle.Text = "⏰ 30 LINH THÚ TRONG BANNER GIỜ NÀY"
+    hourlyTitle.TextSize = 17
+    hourlyTitle.TextXAlignment = Enum.TextXAlignment.Left
+    hourlyTitle.ZIndex = 46
+    hourlyTitle.Parent = hourlyPopup
+    styleLabel(hourlyTitle, Theme.Text, Enum.Font.GothamBlack)
+
+    local hourlySub = Instance.new("TextLabel")
+    hourlySub.Size = UDim2.new(1, -36, 0, 20)
+    hourlySub.Position = UDim2.new(0, 18, 0, 44)
+    hourlySub.BackgroundTransparency = 1
+    hourlySub.Text = "1 Thần Thoại • 3 Huyền Thoại • 5 Siêu Hiếm • 8 Hiếm • 13 Thường"
+    hourlySub.TextSize = 12
+    hourlySub.TextXAlignment = Enum.TextXAlignment.Left
+    hourlySub.ZIndex = 46
+    hourlySub.Parent = hourlyPopup
+    styleLabel(hourlySub, Theme.SubText, Enum.Font.GothamMedium)
+
+    local closeHourlyBtn = Instance.new("TextButton")
+    closeHourlyBtn.Size = UDim2.new(0, 32, 0, 32)
+    closeHourlyBtn.Position = UDim2.new(1, -44, 0, 12)
+    closeHourlyBtn.Text = "✕"
+    closeHourlyBtn.BackgroundColor3 = Theme.Pink
+    closeHourlyBtn.TextColor3 = Theme.White
+    closeHourlyBtn.Font = Enum.Font.GothamBold
+    closeHourlyBtn.TextSize = 15
+    closeHourlyBtn.ZIndex = 46
+    closeHourlyBtn.Parent = hourlyPopup
+    addCorner(closeHourlyBtn, 100)
+
+    local hourlyScroll = Instance.new("ScrollingFrame")
+    hourlyScroll.Size = UDim2.new(1, -28, 1, -80)
+    hourlyScroll.Position = UDim2.new(0, 14, 0, 70)
+    hourlyScroll.BackgroundTransparency = 1
+    hourlyScroll.BorderSizePixel = 0
+    hourlyScroll.ScrollBarThickness = 5
+    hourlyScroll.AutomaticCanvasSize = Enum.AutomaticSize.Y
+    hourlyScroll.CanvasSize = UDim2.new(0, 0, 0, 0)
+    hourlyScroll.ZIndex = 46
+    hourlyScroll.Parent = hourlyPopup
+
+    local hourlyGrid = Instance.new("UIGridLayout")
+    hourlyGrid.CellSize = UDim2.new(0, 100, 0, 96)
+    hourlyGrid.CellPadding = UDim2.new(0, 6, 0, 6)
+    hourlyGrid.SortOrder = Enum.SortOrder.LayoutOrder
+    hourlyGrid.Parent = hourlyScroll
+
+    local lastRenderedHour: number? = nil
+    local function renderHourlyPool()
+        local pool = PetConfig.GetHourlyPool()
+        lastRenderedHour = pool.hourIndex
+
+        for _, child in ipairs(hourlyScroll:GetChildren()) do
+            if child:IsA("GuiObject") then
+                child:Destroy()
+            end
+        end
+
+        for idx, petId in ipairs(pool.petIds) do
+            local pet = PetConfig.Pets[petId]
+            if pet then
+                local rCol = RarityColors[pet.Rarity] or Color3.fromRGB(170, 190, 180)
+                local tile = Instance.new("Frame")
+                tile.Name = "Pool_" .. petId
+                tile.LayoutOrder = idx
+                tile.BackgroundColor3 = Theme.White
+                tile.BorderSizePixel = 0
+                tile.ZIndex = 47
+                tile.Parent = hourlyScroll
+                addCorner(tile, 12)
+                addStroke(tile, rCol, 2, 0.1)
+
+                local ic = Instance.new("TextLabel")
+                ic.Size = UDim2.new(1, 0, 0, 42)
+                ic.Position = UDim2.new(0, 0, 0, 6)
+                ic.BackgroundTransparency = 1
+                ic.Text = pet.Icon or "🐶"
+                ic.TextSize = 28
+                ic.ZIndex = 48
+                ic.Parent = tile
+
+                local nm = Instance.new("TextLabel")
+                nm.Size = UDim2.new(1, -6, 0, 26)
+                nm.Position = UDim2.new(0, 3, 0, 48)
+                nm.BackgroundTransparency = 1
+                nm.Text = pet.DisplayName
+                nm.TextWrapped = true
+                nm.TextSize = 10
+                nm.ZIndex = 48
+                nm.Parent = tile
+                styleLabel(nm, Theme.Text, Enum.Font.GothamBold)
+
+                local badge = Instance.new("TextLabel")
+                badge.Size = UDim2.new(1, -8, 0, 16)
+                badge.Position = UDim2.new(0, 4, 1, -20)
+                badge.BackgroundColor3 = rCol
+                badge.Text = (PetConfig.Rarities[pet.Rarity] and PetConfig.Rarities[pet.Rarity].Name) or pet.Rarity
+                badge.TextColor3 = Theme.White
+                badge.Font = Enum.Font.GothamBold
+                badge.TextSize = 9
+                badge.ZIndex = 48
+                badge.Parent = tile
+                addCorner(badge, 6)
+            end
+        end
+    end
+
+    hourlyBtn.MouseButton1Click:Connect(function()
+        renderHourlyPool()
+        if UIFramework then
+            UIFramework.SpringOpenModal(hourlyPopup)
+        else
+            hourlyPopup.Visible = true
+        end
+    end)
+
+    closeHourlyBtn.MouseButton1Click:Connect(function()
+        if UIFramework then
+            UIFramework.SpringCloseModal(hourlyPopup)
+        else
+            hourlyPopup.Visible = false
+        end
+    end)
+
+    -- Cập nhật đồng hồ đếm ngược đổi 30 cún mỗi giây
+    task.spawn(function()
+        while gachaModal.Parent do
+            local pool = PetConfig.GetHourlyPool()
+            local mins = math.floor(pool.secondsRemaining / 60)
+            local secs = pool.secondsRemaining % 60
+            hourlyBtn.Text = string.format("⏰ 30 Cún Giờ Này (%02d:%02d)", mins, secs)
+            if hourlyPopup.Visible and lastRenderedHour ~= pool.hourIndex then
+                renderHourlyPool()
+            end
+            task.wait(1)
+        end
+    end)
+
+    --==================================================
     -- OPEN / CLOSE MODAL
     --==================================================
 
@@ -577,7 +758,13 @@ function GachaViewController.Init(
         end
     end
 
-    gachaBtn.MouseButton1Click:Connect(openGacha)
+    gachaBtn.MouseButton1Click:Connect(function()
+        if gachaModal.Visible then
+            closeGacha()
+        else
+            openGacha()
+        end
+    end)
 
     closeGachaBtn.MouseButton1Click:Connect(closeGacha)
 
@@ -681,7 +868,16 @@ function GachaViewController.Init(
         roll1Btn.Active = true
         roll5Btn.Active = true
 
-        stageDesc.Text = "✨ Chạm vào vận may để triệu hồi! ✨"
+        -- Xử lý phản hồi lỗi từ server (ví dụ không đủ Xu để quay)
+        if results.error == true then
+            if SoundManager then
+                SoundManager.PlaySFX("Reject")
+            end
+            stageDesc.Text = tostring(results.message or "Không đủ Xu để thực hiện lượt quay này!")
+            return
+        end
+
+        stageDesc.Text = "✨ Quay 1 lần: 100 Xu  •  Quay 5 lần: 450 Xu ✨"
 
         local best = getBestPet(results)
 
@@ -734,11 +930,27 @@ function GachaViewController.Init(
         local power = tonumber(best.basePower) or 0
         local exp = tonumber(best.expPerFeed) or 0
 
-        resStats.Text = string.format(
+        local statsText = string.format(
             "⚔️ Sức mạnh: %d\n🍖 EXP mỗi lần ăn: +%d",
             power,
             exp
         )
+
+        if #results > 1 then
+            local icons = {}
+            for _, pet in ipairs(results) do
+                if type(pet) == "table" then
+                    table.insert(icons, tostring(pet.icon or "🐶"))
+                end
+            end
+            statsText = statsText .. string.format(
+                "\n🎁 Kết quả x%d: %s",
+                #results,
+                table.concat(icons, " ")
+            )
+        end
+
+        resStats.Text = statsText
 
         -- Popup border changes according to rarity.
         if resStroke and resStroke:IsA("UIStroke") then
@@ -749,6 +961,14 @@ function GachaViewController.Init(
         -- Close gacha and display result.
         gachaModal.Visible = false
         resPopup.Visible = true
+
+        if SoundManager then
+            if (RarityRank[rarity] or 1) >= 3 then
+                SoundManager.PlaySFX("GachaRare")
+            else
+                SoundManager.PlaySFX("GachaReveal")
+            end
+        end
 
         playResultAnimation(resPopup)
     end)
@@ -799,7 +1019,7 @@ function GachaViewController.Init(
     gachaModal.Visible = false
     resPopup.Visible = false
 
-    stageDesc.Text = "💗 Chạm vào vận may để triệu hồi linh thú! 💗"
+    stageDesc.Text = "🪙 Quay x1: 100 Xu • Quay x5: 450 Xu (Đi Ải kiếm Xu!)"
 end
 
 return GachaViewController

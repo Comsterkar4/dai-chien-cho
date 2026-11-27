@@ -1,0 +1,10 @@
+{
+  "name": "dai-chien-cho",
+  "version": "1.0.0",
+  "description": "Roblox Pet Simulator - Dai Chien Cho",
+  "scripts": {
+    "test:syntax": "~/.local/bin/lune run tests/check_syntax.luau",
+    "test:logic": "~/.local/bin/lune run tests/run_tests.luau",
+    "test": "~/.local/bin/lune run tests/check_syntax.luau && ~/.local/bin/lune run tests/run_tests.luau"
+  }
+}

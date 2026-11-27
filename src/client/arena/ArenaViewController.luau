@@ -3,15 +3,23 @@
 local TweenService = game:GetService("TweenService")
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local ProximityPromptService = game:GetService("ProximityPromptService")
+local Players = game:GetService("Players")
 local Debris = game:GetService("Debris")
 
 local ArenaViewController = {}
 
--- Danh sách 3 Boss thử thách trong Đấu Trường
+local Modules = ReplicatedStorage:WaitForChild("Modules")
+local FrameworkFolder = Modules:FindFirstChild("Framework") or Modules
+local SoundManagerModule = FrameworkFolder:FindFirstChild("SoundManager")
+local SoundManager: any = SoundManagerModule and require(SoundManagerModule) or nil
+
+-- Danh sách 5 Ải Đánh Quái / Boss Farm Xu (tăng độ khó + Boss Skill mỗi 3 lượt, mở slot 1..5 Pet theo Lv.5/10/15/20/30)
 local BOSS_LIST = {
-    { id = "corgi_boss", name = "Corgi Tốc Độ", icon = "🦊", level = 3, power = 18, hp = 120, rewardExp = 60, rewardGold = 100, color = Color3.fromRGB(245, 158, 11) },
-    { id = "husky_boss", name = "Husky Băng Giá", icon = "🐺", level = 8, power = 45, hp = 280, rewardExp = 180, rewardGold = 300, color = Color3.fromRGB(6, 182, 212) },
-    { id = "tibetan_boss", name = "Ngao Tây Tạng Vương", icon = "🦁", level = 15, power = 110, hp = 650, rewardExp = 550, rewardGold = 1000, color = Color3.fromRGB(239, 68, 68) }
+    { id = "stage1_pug", name = "Ải 1: Pug Tập Sự", icon = "🐕", level = 1, power = 16, hp = 160, rewardExp = 40, rewardCoins = 40, color = Color3.fromRGB(34, 197, 94) },
+    { id = "corgi_boss", name = "Ải 2: Corgi Tốc Độ", icon = "🦊", level = 5, power = 55, hp = 480, rewardExp = 80, rewardCoins = 100, color = Color3.fromRGB(245, 158, 11) },
+    { id = "husky_boss", name = "Ải 3: Husky Băng Giá", icon = "🐺", level = 10, power = 135, hp = 1250, rewardExp = 200, rewardCoins = 250, color = Color3.fromRGB(6, 182, 212) },
+    { id = "doberman_boss", name = "Ải 4: Dũng Sĩ Doberman", icon = "⚡", level = 15, power = 260, hp = 2600, rewardExp = 360, rewardCoins = 500, color = Color3.fromRGB(168, 85, 247) },
+    { id = "tibetan_boss", name = "Ải 5: Ngao Tây Tạng Vương", icon = "🦁", level = 20, power = 450, hp = 5000, rewardExp = 650, rewardCoins = 1000, color = Color3.fromRGB(239, 68, 68) },
 }
 
 -- Khởi tạo hoặc tìm ArenaModal
@@ -44,7 +52,7 @@ local function getOrCreateArenaModal(mainHud: ScreenGui, WebStyleEngine: any): F
     title.Size = UDim2.new(1, -60, 0, 45)
     title.Position = UDim2.new(0, 20, 0, 15)
     title.BackgroundTransparency = 1
-    title.Text = "⚔️ ĐẤU TRƯỜNG SOLO PET ⚔️"
+    title.Text = "⚔️ VƯỢT ẢI ĐÁNH QUÁI FARM XU ⚔️"
     title.TextColor3 = Color3.fromRGB(255, 90, 70)
     title.Font = Enum.Font.FredokaOne
     title.TextSize = 24
@@ -74,6 +82,8 @@ local function getOrCreateArenaModal(mainHud: ScreenGui, WebStyleEngine: any): F
     bossListFrame.Position = UDim2.new(0, 20, 0, 75)
     bossListFrame.BackgroundTransparency = 1
     bossListFrame.ScrollBarThickness = 4
+    bossListFrame.AutomaticCanvasSize = Enum.AutomaticSize.Y
+    bossListFrame.CanvasSize = UDim2.new(0, 0, 0, 0)
     bossListFrame.Parent = modal
 
     local layout = Instance.new("UIListLayout")
@@ -85,7 +95,7 @@ local function getOrCreateArenaModal(mainHud: ScreenGui, WebStyleEngine: any): F
 end
 
 -- Tạo Popup kết quả trận đấu (Victory / Defeat Popup)
-local function showBattleResult(mainHud: ScreenGui, result: {isVictory: boolean, bossName: string, rewardExp: number?, rewardGold: number?}, UIFramework: any, WebStyleEngine: any)
+local function showBattleResult(mainHud: ScreenGui, result: {isVictory: boolean, bossName: string, rewardExp: number?, rewardCoins: number?, rewardGold: number?, droppedItem: {id: string, name: string, icon: string}?}, UIFramework: any, WebStyleEngine: any)
     local existing = mainHud:FindFirstChild("BattleResultModal")
     if existing then existing:Destroy() end
 
@@ -125,11 +135,14 @@ local function showBattleResult(mainHud: ScreenGui, result: {isVictory: boolean,
     desc.Position = UDim2.new(0, 20, 0, 75)
     desc.BackgroundTransparency = 1
     if isVic then
-        if result.rewardGold and result.rewardGold > 0 then
-            desc.Text = string.format("Hạ gục thành công %s!\n\n✨ Nhận: +%d EXP  •  💰 +%d Vàng", result.bossName, result.rewardExp or 0, result.rewardGold)
-        else
-            desc.Text = string.format("Hạ gục thành công %s!\n\n✨ Nhận: +%d EXP", result.bossName, result.rewardExp or 0)
+        local coinsEarned = result.rewardCoins or result.rewardGold or 0
+        local rewardLine = coinsEarned > 0
+            and string.format("🪙 Nhận: +%d Xu  •  ✨ +%d EXP", coinsEarned, result.rewardExp or 0)
+            or string.format("✨ Nhận: +%d EXP", result.rewardExp or 0)
+        if type(result.droppedItem) == "table" and result.droppedItem.name then
+            rewardLine = rewardLine .. string.format("\n🎁 Rơi vật phẩm: +1 %s %s", tostring(result.droppedItem.icon or "🎁"), tostring(result.droppedItem.name))
         end
+        desc.Text = string.format("Vượt ải thành công %s!\n\n%s", result.bossName, rewardLine)
     else
         desc.Text = string.format("Thú cưng đã bị %s áp đảo!\nHãy cho cún ăn để nâng cấp và phục thù nhé!\n\n✨ Nhận an ủi: +%d EXP", result.bossName, result.rewardExp or 15)
     end
@@ -243,6 +256,147 @@ function ArenaViewController.Init(mainHud: ScreenGui, UIFramework: any, WebStyle
     local StartPetBattleEvent = Events:WaitForChild("StartPetBattle")
     local BattleUpdateEvent = Events:WaitForChild("BattleUpdate")
     local BattleFinishEvent = Events:WaitForChild("BattleFinish")
+    local PartyActionEvent = Events:WaitForChild("PartyAction", 10)
+    local PartyUpdateEvent = Events:WaitForChild("PartyUpdate", 10)
+
+    -- Thanh Banner Tổ Đội Co-op tối đa 3 người (ở giữa phía trên màn hình)
+    local existingPartyBanner = mainHud:FindFirstChild("PartyLobbyBanner")
+    if existingPartyBanner then
+        existingPartyBanner:Destroy()
+    end
+
+    local partyBanner = Instance.new("Frame")
+    partyBanner.Name = "PartyLobbyBanner"
+    partyBanner.Size = UDim2.new(0, 470, 0, 88)
+    partyBanner.Position = UDim2.new(0.5, 0, 0, 14)
+    partyBanner.AnchorPoint = Vector2.new(0.5, 0)
+    partyBanner.Visible = false
+    partyBanner.ZIndex = 48
+    partyBanner.Parent = mainHud
+
+    WebStyleEngine.ApplyGlassmorphism(partyBanner, {
+        BorderRadius = 18,
+        BackgroundColor = Color3.fromRGB(22, 20, 38),
+        Transparency = 0.08,
+        BorderColor = Color3.fromRGB(255, 195, 65),
+        BorderTransparency = 0.2,
+        BorderWidth = 2,
+    })
+
+    local partyTitle = Instance.new("TextLabel")
+    partyTitle.Size = UDim2.new(1, -24, 0, 24)
+    partyTitle.Position = UDim2.new(0, 12, 0, 8)
+    partyTitle.BackgroundTransparency = 1
+    partyTitle.Text = "👥 TỔ ĐỘI VƯỢT ẢI (1/3) • ⏱️ 10s"
+    partyTitle.TextColor3 = Color3.fromRGB(255, 220, 80)
+    partyTitle.Font = Enum.Font.FredokaOne
+    partyTitle.TextSize = 15
+    partyTitle.TextXAlignment = Enum.TextXAlignment.Left
+    partyTitle.ZIndex = 49
+    partyTitle.Parent = partyBanner
+
+    local partyMembersLbl = Instance.new("TextLabel")
+    partyMembersLbl.Size = UDim2.new(0, 250, 0, 36)
+    partyMembersLbl.Position = UDim2.new(0, 12, 0, 36)
+    partyMembersLbl.BackgroundTransparency = 1
+    partyMembersLbl.Text = "Thành viên: ..."
+    partyMembersLbl.TextColor3 = Color3.fromRGB(215, 220, 240)
+    partyMembersLbl.Font = Enum.Font.GothamMedium
+    partyMembersLbl.TextSize = 12
+    partyMembersLbl.TextXAlignment = Enum.TextXAlignment.Left
+    partyMembersLbl.TextWrapped = true
+    partyMembersLbl.ZIndex = 49
+    partyMembersLbl.Parent = partyBanner
+
+    local primaryActionBtn = Instance.new("TextButton")
+    primaryActionBtn.Name = "PrimaryPartyBtn"
+    primaryActionBtn.Size = UDim2.new(0, 112, 0, 36)
+    primaryActionBtn.Position = UDim2.new(1, -196, 1, -46)
+    primaryActionBtn.Text = "THAM GIA"
+    primaryActionBtn.TextColor3 = Color3.fromRGB(255, 255, 255)
+    primaryActionBtn.Font = Enum.Font.FredokaOne
+    primaryActionBtn.TextSize = 13
+    primaryActionBtn.ZIndex = 49
+    primaryActionBtn.Parent = partyBanner
+    WebStyleEngine.StyleButton(primaryActionBtn, "Success", 12)
+    UIFramework.ApplySpringButton(primaryActionBtn, { HoverScale = 1.06, ClickScale = 0.92, Speed = 30, Damping = 0.65 })
+
+    local cancelPartyBtn = Instance.new("TextButton")
+    cancelPartyBtn.Name = "CancelPartyBtn"
+    cancelPartyBtn.Size = UDim2.new(0, 70, 0, 36)
+    cancelPartyBtn.Position = UDim2.new(1, -78, 1, -46)
+    cancelPartyBtn.Text = "HỦY"
+    cancelPartyBtn.TextColor3 = Color3.fromRGB(255, 255, 255)
+    cancelPartyBtn.Font = Enum.Font.FredokaOne
+    cancelPartyBtn.TextSize = 12
+    cancelPartyBtn.ZIndex = 49
+    cancelPartyBtn.Parent = partyBanner
+    WebStyleEngine.StyleButton(cancelPartyBtn, "Danger", 12)
+    UIFramework.ApplySpringButton(cancelPartyBtn, { HoverScale = 1.06, ClickScale = 0.92, Speed = 30, Damping = 0.65 })
+
+    local currentPrimaryAction = "join"
+    primaryActionBtn.MouseButton1Click:Connect(function()
+        if PartyActionEvent and PartyActionEvent:IsA("RemoteEvent") then
+            PartyActionEvent:FireServer(currentPrimaryAction)
+        end
+    end)
+    cancelPartyBtn.MouseButton1Click:Connect(function()
+        if PartyActionEvent and PartyActionEvent:IsA("RemoteEvent") then
+            PartyActionEvent:FireServer("cancel")
+        end
+    end)
+
+    if PartyUpdateEvent and PartyUpdateEvent:IsA("RemoteEvent") then
+        PartyUpdateEvent.OnClientEvent:Connect(function(payload)
+            if type(payload) ~= "table" then return end
+            if payload.state == "Open" then
+                local lp = Players.LocalPlayer
+                local isHost = lp and (payload.hostUserId == lp.UserId)
+                local membersList = type(payload.members) == "table" and payload.members or {}
+                local alreadyJoined = false
+                if lp then
+                    for _, name in ipairs(membersList) do
+                        if name == lp.DisplayName then
+                            alreadyJoined = true
+                            break
+                        end
+                    end
+                end
+
+                partyTitle.Text = string.format(
+                    "👥 %s (%d/%d) • ⏱️ %ds",
+                    tostring(payload.bossName or "Vượt Ải"),
+                    tonumber(payload.memberCount) or 1,
+                    tonumber(payload.maxMembers) or 3,
+                    tonumber(payload.timeLeft) or 0
+                )
+                partyMembersLbl.Text = "Thành viên: " .. table.concat(membersList, ", ")
+
+                if isHost then
+                    currentPrimaryAction = "start_now"
+                    primaryActionBtn.Text = "VÀO ẢI NGAY"
+                    primaryActionBtn.Visible = true
+                    cancelPartyBtn.Text = "HỦY"
+                    cancelPartyBtn.Visible = true
+                    WebStyleEngine.StyleButton(primaryActionBtn, "Gold", 12)
+                elseif alreadyJoined then
+                    primaryActionBtn.Visible = false
+                    cancelPartyBtn.Text = "RỜI ĐỘI"
+                    cancelPartyBtn.Visible = true
+                else
+                    currentPrimaryAction = "join"
+                    primaryActionBtn.Text = "THAM GIA"
+                    primaryActionBtn.Visible = true
+                    cancelPartyBtn.Visible = false
+                    WebStyleEngine.StyleButton(primaryActionBtn, "Success", 12)
+                end
+
+                partyBanner.Visible = true
+            else
+                partyBanner.Visible = false
+            end
+        end)
+    end
 
     -- Render 3 thẻ Boss thử thách
     for idx, boss in ipairs(BOSS_LIST) do
@@ -285,13 +439,13 @@ function ArenaViewController.Init(mainHud: ScreenGui, UIFramework: any, WebStyle
         title.Parent = card
 
         local stats = Instance.new("TextLabel")
-        stats.Size = UDim2.new(0, 240, 0, 18)
-        stats.Position = UDim2.new(0, 82, 0, 42)
+        stats.Size = UDim2.new(0, 270, 0, 34)
+        stats.Position = UDim2.new(0, 82, 0, 40)
         stats.BackgroundTransparency = 1
-        stats.Text = string.format("❤️ HP: %d  •  ⚔️ Sức Mạnh: %d", boss.hp, boss.power)
-        stats.TextColor3 = Color3.fromRGB(200, 195, 215)
+        stats.Text = string.format("❤️ HP: %d • ⚔️ %d\n🪙 +%d Xu • ✨ +%d EXP", boss.hp, boss.power, boss.rewardCoins, boss.rewardExp)
+        stats.TextColor3 = Color3.fromRGB(220, 225, 240)
         stats.Font = Enum.Font.GothamMedium
-        stats.TextSize = 12
+        stats.TextSize = 11
         stats.TextXAlignment = Enum.TextXAlignment.Left
         stats.Parent = card
 
@@ -317,18 +471,39 @@ function ArenaViewController.Init(mainHud: ScreenGui, UIFramework: any, WebStyle
 
     -- Lắng nghe cập nhật / từ chối khiêu chiến
     BattleUpdateEvent.OnClientEvent:Connect(function(payload)
-        if type(payload) == "table" and payload.state == "Rejected" then
+        if type(payload) ~= "table" then
+            return
+        end
+        if payload.state == "Rejected" then
+            if SoundManager then
+                SoundManager.PlaySFX("Reject")
+            end
             showBattleRejection(
                 mainHud,
                 tostring(payload.message or "Không thể bắt đầu trận đấu lúc này!"),
                 UIFramework,
                 WebStyleEngine
             )
+        elseif payload.state == "Ready" then
+            if SoundManager then
+                SoundManager.PlaySFX("BattleStart")
+                SoundManager.PlayBGM("Battle", 0.6)
+            end
+        elseif payload.state == "Round" then
+            if SoundManager then
+                SoundManager.PlaySFX(payload.isCrit and "CritHit" or "AttackHit", 0.08)
+            end
         end
     end)
 
     -- Lắng nghe kết thúc trận đấu
     BattleFinishEvent.OnClientEvent:Connect(function(result)
+        if SoundManager and type(result) == "table" then
+            SoundManager.PlaySFX(result.isVictory and "Victory" or "Defeat")
+            task.delay(2.5, function()
+                SoundManager.PlayBGM("Park", 1.0)
+            end)
+        end
         showBattleResult(mainHud, result, UIFramework, WebStyleEngine)
     end)
 

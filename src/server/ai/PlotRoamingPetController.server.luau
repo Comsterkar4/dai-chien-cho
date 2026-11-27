@@ -160,37 +160,3 @@ local function initAllRoamingPets()
 end
 
 initAllRoamingPets()
-    for id = 1, 6 do
-        local plot = PlayerPlots:FindFirstChild("Plot_" .. id)
-        if plot then
-            local roamFolder = plot:FindFirstChild("RoamingPets")
-            if roamFolder then
-                for _, pet in ipairs(roamFolder:GetChildren()) do
-                    startPetAI(pet, plot, id)
-                end
-            end
-        end
-    end
-end
-
--- Khởi động AI cho tất cả cún hiện có và lắng nghe khi có cún mới thả vào vườn
-local function initAllRoamingPets()
-    for id = 1, 6 do
-        local plot = PlayerPlots:FindFirstChild("Plot_" .. id)
-        if plot then
-            local roamFolder = plot:FindFirstChild("RoamingPets")
-            if roamFolder then
-                for _, pet in ipairs(roamFolder:GetChildren()) do
-                    startPetAI(pet, plot, id)
-                end
-                -- Tự động kích hoạt AI khi người chơi thả thêm cún mới vào vườn
-                roamFolder.ChildAdded:Connect(function(newPet)
-                    task.wait(0.2)
-                    startPetAI(newPet, plot, id)
-                end)
-            end
-        end
-    end
-end
-
-initAllRoamingPets()

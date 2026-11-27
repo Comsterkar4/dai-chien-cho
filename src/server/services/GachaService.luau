@@ -21,10 +21,24 @@ export type GachaResult = {
 
 local playerCollections: {[Player]: {string}} = {}
 
-function GachaService.InitPlayer(player: Player): {string}
-    local initial = {"Shiba"}
+function GachaService.InitPlayer(player: Player, savedCollection: {string}?): {string}
+    local initial: {string} = {}
+    if type(savedCollection) == "table" and #savedCollection > 0 then
+        for _, petId in ipairs(savedCollection) do
+            if type(petId) == "string" and PetConfig.Pets[petId] and not table.find(initial, petId) then
+                table.insert(initial, petId)
+            end
+        end
+    end
+    if not table.find(initial, "Shiba") then
+        table.insert(initial, "Shiba")
+    end
     playerCollections[player] = initial
     return initial
+end
+
+function GachaService.GetHourlyBanner(timestamp: number?)
+    return PetConfig.GetHourlyPool(timestamp)
 end
 
 function GachaService.GetCollection(player: Player): {string}
