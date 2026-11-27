@@ -5,7 +5,7 @@ status: spec
 roles: [Người chơi]
 goals: [G-04]
 depends: [F-01, F-05]
-perms: [pet:feed, pet:walk]
+perms: [pet:feed, pet:walk, pet:bag]
 ideas: [I-02]
 priority: must
 phase: 1
@@ -13,7 +13,7 @@ phase: 1
 # F-06. Kiếm Xu từ hoạt động chăm sóc
 
 Thưởng Xu cho người chơi khi cho thú cưng ăn, khi thú cưng thăng cấp và khi dắt thú cưng đi dạo.
-Vào từ: SC-01, SC-05, nút Feed hoặc nút Dắt chó
+Vào từ: SC-01, SC-02, SC-05, nút Feed, vật phẩm thức ăn trong túi đồ hoặc nút Dắt chó
 
 ## Quy tắc
 - **R1** Khi người chơi bấm nút Feed hợp lệ ngoài thời gian hồi 0.5 giây (BR-03) → hệ thống cộng 2 Xu vào Ví Xu theo TR-04, BR-11, BR-13 và BR-14, đồng thời cập nhật số dư hiển thị trên SC-01 và SC-07 theo UI-06 trong ngưỡng NFR-01.
@@ -67,14 +67,14 @@ Vào từ: SC-01, SC-05, nút Feed hoặc nút Dắt chó
 - Khi: người chơi đứng yên không di chuyển trong 5 giây
 - Thì: số dư Ví Xu giữ nguyên 100 Xu trên SC-01 và SC-07
 
-### F-06-AC6 · Dùng vật phẩm thức ăn từ túi đồ chỉ thưởng Xu khi thăng cấp
-- Phủ: R6, R2 · Kiểm: e2e
+### F-06-AC6 · Dùng vật phẩm thức ăn từ túi đồ chưa đủ EXP thăng cấp không cộng Xu
+- Phủ: R6 · Kiểm: e2e
 - Cho: người chơi có Ví Xu với số dư 100 Xu, chú chó Shiba cấp 1 có 0 trên 100 EXP và túi đồ SC-02 có 5 miếng thịt tươi cộng 50 EXP mỗi miếng
 - Khi: người chơi dùng 1 miếng thịt tươi từ túi đồ SC-02
 - Thì: chú chó tăng lên 50 trên 100 EXP và số dư Ví Xu giữ nguyên 100 Xu
 
 ### F-06-AC7 · Giữ nguyên số dư máy chủ khi mất kết nối lúc cộng Xu
-- Phủ: R7, BR-11 · Kiểm: api
+- Phủ: R7, BR-11 · Kiểm: e2e
 - Cho: người chơi có Ví Xu trên máy chủ là 100 Xu và kết nối mạng tới máy chủ bị gián đoạn
 - Khi: người chơi bấm nút Feed trong lúc mất kết nối
 - Thì: máy chủ không ghi nhận giao dịch cộng Xu và khi kết nối lại giao diện đồng bộ hiển thị 100 Xu
@@ -84,6 +84,13 @@ Vào từ: SC-01, SC-05, nút Feed hoặc nút Dắt chó
 - Cho: người chơi có Ví Xu với số dư 100 Xu đang trang bị thú cưng độ hiếm Mythic
 - Khi: người chơi bấm nút Feed hợp lệ
 - Thì: số dư Ví Xu tăng đúng 2 Xu thành 102 Xu mà không áp dụng hệ số nhân theo độ hiếm
+
+### F-06-AC9 · Dùng vật phẩm thức ăn từ túi đồ đủ EXP thăng cấp chỉ cộng Xu thăng cấp
+- Phủ: R6, R2, BR-02, BR-14, UI-06 · Kiểm: e2e
+- Cho: người chơi có Ví Xu với số dư 100 Xu, chú chó Shiba cấp 1 có 50 trên 100 EXP và túi đồ SC-02 có 5 miếng thịt tươi cộng 50 EXP mỗi miếng
+- Khi: người chơi dùng 1 miếng thịt tươi từ túi đồ SC-02
+- Thì: chú chó thăng lên cấp 2 với 0 trên 150 EXP
+- Và: số dư Ví Xu tăng đúng 15 Xu thành 115 Xu mà không cộng 2 Xu của nút Feed, đồng thời hiển thị 115 Xu trên SC-01 và SC-07
 
 ## Ghi chú
 Cho dev: logic cộng Xu của R1, R2 và R3 phải thực hiện phía máy chủ (Server) gắn trực tiếp vào sự kiện cho ăn, thăng cấp và chu kỳ đi dạo của F-01 để tránh gian lận từ máy khách.
